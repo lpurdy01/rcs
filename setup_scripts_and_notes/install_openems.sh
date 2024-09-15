@@ -9,9 +9,9 @@ pip install numpy matplotlib cython h5py
 mkdir ~/repos
 cd ~/repos
 git clone --recursive https://github.com/thliebig/openEMS-Project.git
-cd openEMS-Project
+cd ~/repos/openEMS-Project
 ./update_openEMS.sh ~/opt/openEMS --python
-cd openEMS/python/
+cd ~/repos/openEMS-Project/openEMS/python/
 python setup.py install --user
-cd CSXCAD/python/
+cd ~/repos/openEMS-Project/CSXCAD/python/
 python setup.py install --user
