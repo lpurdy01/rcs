@@ -28,7 +28,11 @@ FDTD = openEMS(EndCriteria=1e-5)
 
 f_start = 50e6  # start frequency
 f_stop = 1000e6  # stop frequency
-FDTD.SetGaussExcite(0.5 * (f_start + f_stop), 0.5 * (f_stop - f_start))
+f0 = 0.5 * (f_start + f_stop)
+fc = 0.5 * (f_stop - f_start)
+
+# Set Gaussian excitation (same as the original script)
+FDTD.SetGaussExcite(f0, fc)
 
 # Boundary conditions (PML_8 in all directions)
 FDTD.SetBoundaryCond(['PML_8', 'PML_8', 'PML_8', 'PML_8', 'PML_8', 'PML_8'])
@@ -49,13 +53,13 @@ mesh.SetLines('z', mesh.GetLines('x'))
 sphere_metal = CSX.AddMetal('sphere')  # Create a perfect electric conductor (PEC)
 sphere_metal.AddSphere(priority=10, center=[0, 0, 0], radius=sphere_rad)
 
-# Plane wave excitation
+# Plane wave excitation (correcting excitation)
 k_dir = [1, 0, 0]  # plane wave direction (incident along x-axis)
 E_dir = [0, 0, 1]  # plane wave polarization --> E_z
 
 pw_exc = CSX.AddExcitation('plane_wave', exc_type=10, exc_val=E_dir)
 pw_exc.SetPropagationDir(k_dir)
-pw_exc.SetFrequency(0.5 * (f_start + f_stop))
+pw_exc.SetFrequency(f0)
 
 start = [-PW_Box / 2, -PW_Box / 2, -PW_Box / 2]
 stop = [PW_Box / 2, PW_Box / 2, PW_Box / 2]
