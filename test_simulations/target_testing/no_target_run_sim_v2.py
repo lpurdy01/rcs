@@ -27,16 +27,11 @@ from stl_import import import_stl_into_openems, copy_stl_to_simulation_path
 
 ### Setup the simulation
 # Define the simulation path
-Sim_Path = os.path.join(tempfile.gettempdir(), 'RCS_STL_Target_Simulation')
+Sim_Path = os.path.join(tempfile.gettempdir(), 'No_target_0_calib')
 post_proc_only = False  # Set to True to skip simulation run
 
 # All lengths in meters
 # Remove unit conversion; units are now in meters
-
-# Define the path to your STL file
-stl_file_path = '../../test_targets/stl_test_target_ASCI.stl'
-
-stl_file_path = copy_stl_to_simulation_path(stl_file_path, Sim_Path)
 
 # Incident angle (to x-axis) in degrees
 inc_angle = 0
@@ -85,25 +80,6 @@ mesh_resolution = C0 / f_stop / 10  # Cell size: lambda/40 at highest frequency
 mesh.SmoothMeshLines('x', mesh_resolution)
 mesh.SmoothMeshLines('y', mesh_resolution)
 mesh.SmoothMeshLines('z', mesh_resolution)
-
-### Import the STL object
-# Define transformations if needed
-transform = {
-    'Scale': [0.003, 0.003, 0.003],  # Scale from mm to meters if STL is in mm And multiply by 3x to make it larger
-    'Rotate': [90.0, 0.0, 90.0],       # Rotate to have nose pointing in the +x direction
-    'Translate': [-0.2, 0.0, 0.0],    # Roughly center the object in the simulation box
-}
-
-
-# Import the STL object into the simulation
-polyhedron = import_stl_into_openems(
-    CSX,
-    stl_file_path,
-    material_name='stl_object',
-    material_properties=None,  # Use PEC material
-    priority=10,
-    transform=transform
-)
 
 # Since we are not refining the mesh around the STL object, we skip adding mesh lines at its boundaries
 

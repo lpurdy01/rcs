@@ -31,3 +31,8 @@ If you want to change the polarization or the direction of the incoming wave, yo
 
 Recap on Right-Hand Rule:
 The right-hand rule ensures that if you point your thumb in the direction of k_dir (propagation), and your index finger in the direction of E_dir (electric field), your middle finger will point in the direction of the magnetic field.
+
+
+## Coordinate space in sims
+Angles appear to be relative to x axis.
+
