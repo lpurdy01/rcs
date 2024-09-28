@@ -154,7 +154,7 @@ if not post_proc_only:
     np.save(os.path.join(Sim_Path, 'freq.npy'), freq)
 
     # Calculate NF2FF over frequency at specific angle
-    nf2ff_res_freq = nf2ff.CalcNF2FF(Sim_Path, freq, 90, 180 + inc_angle)
+    nf2ff_res_freq = nf2ff.CalcNF2FF(Sim_Path, freq, 90, 0)
 
     # Save NF2FF results over frequency
     np.save(os.path.join(Sim_Path, 'nf2ff_P_rad_freq.npy'), nf2ff_res_freq.P_rad)
@@ -162,7 +162,6 @@ if not post_proc_only:
     # Save simulation parameters for post-processing
     sim_params = {
         'Sim_Path': Sim_Path,
-        'inc_angle': inc_angle,
         'f_start': f_start,
         'f_stop': f_stop,
         'f0': f0,

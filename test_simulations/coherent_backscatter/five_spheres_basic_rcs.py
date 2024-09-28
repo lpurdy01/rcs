@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Simulation Setup for RCS of an Object Imported from an STL File
+Simulation Setup for RCS of Multiple Spheres
 
-This script runs the simulation using an STL file as the object under test,
-saves the data needed for post-processing, and includes an E-field dump.
+This script sets up and runs an RCS simulation using five spheres
+arranged on the y-z plane, saves the data needed for post-processing,
+and includes an E-field dump.
 
 Tested with:
  - Python 3.10
@@ -22,23 +23,13 @@ from openEMS.physical_constants import *
 from openEMS.ports import UI_data
 import tempfile
 
-# Import the helper function to import STL files
-from stl_import import import_stl_into_openems, copy_stl_to_simulation_path
-
 ### Setup the simulation
 # Define the simulation path
-Sim_Path = os.path.join(tempfile.gettempdir(), 'RCS_STL_Target_Simulation')
-post_proc_only = False  # Set to True to skip simulation run
+Sim_Path = os.path.join(tempfile.gettempdir(), 'RCS_Spheres_Simulation')
+post_proc_only = False # Set to True to skip simulation run
 
 # All lengths in meters
-# Remove unit conversion; units are now in meters
-
-# Define the path to your STL file
-stl_file_path = '../../test_targets/stl_test_target_ASCI.stl'
-
-stl_file_path = copy_stl_to_simulation_path(stl_file_path, Sim_Path)
-
-# Size of the simulation box in meters (set separately for x, y, z)
+# Define the size of the simulation box in meters
 SimBox_x = 2  # meters
 SimBox_y = 2  # meters
 SimBox_z = 2  # meters
@@ -63,7 +54,6 @@ FDTD.SetBoundaryCond(['PML_8'] * 6)
 CSX = ContinuousStructure()
 FDTD.SetCSX(CSX)
 mesh = CSX.GetGrid()
-# Not using SetDeltaUnit; units are in meters
 
 # Create mesh
 # Define the simulation space (in meters)
@@ -83,26 +73,24 @@ mesh.SmoothMeshLines('x', mesh_resolution)
 mesh.SmoothMeshLines('y', mesh_resolution)
 mesh.SmoothMeshLines('z', mesh_resolution)
 
-### Import the STL object
-# Define transformations if needed
-transform = {
-    'Scale': [0.003, 0.003, 0.003],  # Scale from mm to meters if STL is in mm And multiply by 3x to make it larger
-    'Rotate': [90.0, 0.0, 90.0],       # Rotate to have nose pointing in the +x direction
-    'Translate': [-0.2, 0.0, 0.0],    # Roughly center the object in the simulation box
-}
+### Create five spheres in the y-z plane
+# Sphere parameters
+sphere_radius = 0.08  # 5 cm radius
+sphere_positions = [
+    [0, -0.3, -0.35],
+    [0, -0.3,  0.35],
+    [-0.3, -0.3,  0.0],
+    [0,  0.0,  0.0],
+    [0,  0.3, -0.25],
+    [0,  0.3,  0.25],
+    [0.3, 0.3,  0.0]
+]
 
+# Add spheres to the simulation
+sphere_metal = CSX.AddMetal('Sphere')
 
-# Import the STL object into the simulation
-polyhedron = import_stl_into_openems(
-    CSX,
-    stl_file_path,
-    material_name='stl_object',
-    material_properties=None,  # Use PEC material
-    priority=10,
-    transform=transform
-)
-
-# Since we are not refining the mesh around the STL object, we skip adding mesh lines at its boundaries
+for pos in sphere_positions:
+    sphere_metal.AddSphere(priority=10, center=pos, radius=sphere_radius)
 
 ### Plane wave excitation
 # Plane wave direction and polarization
@@ -131,7 +119,7 @@ if not os.path.exists(Sim_Path):
     os.makedirs(Sim_Path)
 
 # Write the simulation setup to an XML file
-CSX_file = os.path.join(Sim_Path, 'RCS_STL_Object.xml')
+CSX_file = os.path.join(Sim_Path, 'RCS_Spheres.xml')
 CSX.Write2XML(CSX_file)
 print(f"Simulation setup saved to XML file: {CSX_file}")
 

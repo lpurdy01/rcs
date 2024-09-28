@@ -35,6 +35,7 @@ def post_process(sim_path):
     # Extract parameters
     #unit = params['unit']
     sphere_rad = 0.2
+    inc_angle = params['inc_angle']
     f_start = params['f_start']
     f_stop = params['f_stop']
     f0 = params['f0']
@@ -93,7 +94,7 @@ def post_process(sim_path):
 
 if __name__ == '__main__':
     # Set the simulation path
-    sim_path = os.path.join(tempfile.gettempdir(), 'RCS_STL_Target_Simulation')
+    sim_path = os.path.join(tempfile.gettempdir(), 'No_target_0_calib')
 
     if not os.path.exists(sim_path):
         print(f"Simulation directory not found: {sim_path}")
