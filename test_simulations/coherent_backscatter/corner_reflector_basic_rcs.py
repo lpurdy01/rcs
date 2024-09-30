@@ -44,7 +44,7 @@ PW_Box_z = 1  # meters
 FDTD = openEMS(EndCriteria=1e-3)
 
 f_start = 50e6   # Start frequency in Hz
-f_stop = 3000e6  # Stop frequency in Hz
+f_stop = 2000e6  # Stop frequency in Hz
 f0 = 0.5 * (f_start + f_stop)  # Center frequency
 
 FDTD.SetGaussExcite(f0, 0.5 * (f_stop - f_start))
@@ -67,7 +67,7 @@ mesh.SetLines('y', mesh_y_lines)
 mesh.SetLines('z', mesh_z_lines)
 
 # Mesh refinement parameters
-mesh_resolution = C0 / f_stop / 8  # Cell size: lambda/40 at highest frequency
+mesh_resolution = C0 / f_stop / 10  # Cell size: lambda/40 at highest frequency
 
 # Smooth the mesh lines
 mesh.SmoothMeshLines('x', mesh_resolution)
@@ -98,8 +98,6 @@ interior_box.AddTransform('RotateAxis', 'y', 45)
 
 interior_box.AddTransform('RotateAxis', 'z', 180)
 
-
-
 # Set the cube corner as the interaction point
 reflector_center = [0, 0, 0]
 
@@ -123,6 +121,23 @@ nf2ff = FDTD.CreateNF2FFBox()
 ### Add E-field dump
 E_dump = CSX.AddDump('E_dump', dump_type=0, file_type=0, frequency=[f0])
 E_dump.AddBox(start=start, stop=stop)
+
+# Adjust dump boxes with node interpolation for E-field and H-field to match grids
+E_dump_outside = CSX.AddDump('E_dump_outside', dump_type=0, file_type=0, dump_mode=1)
+H_dump_outside = CSX.AddDump('H_dump_outside', dump_type=1, file_type=0, dump_mode=1)
+
+E_dump_back = CSX.AddDump('E_dump_back', dump_type=0, file_type=1, dump_mode=1)
+H_dump_back = CSX.AddDump('H_dump_back', dump_type=1, file_type=1, dump_mode=1)
+
+backscatter_dump_thickness = mesh_resolution/2
+
+thin_dump_start = np.array([-PW_Box_x/2 - mesh_resolution, -PW_Box_y / 2, -PW_Box_z / 2])
+thin_dump_stop = np.array([-PW_Box_x/2 - mesh_resolution - backscatter_dump_thickness, PW_Box_y / 2, PW_Box_z / 2])
+
+E_dump_outside.AddBox(start=thin_dump_start, stop=thin_dump_stop)
+H_dump_outside.AddBox(start=thin_dump_start, stop=thin_dump_stop)
+E_dump_back.AddBox(start=thin_dump_start, stop=thin_dump_stop)
+H_dump_back.AddBox(start=thin_dump_start, stop=thin_dump_stop)
 
 ### Save the simulation setup to an XML file
 # Create the simulation directory if it doesn't exist

@@ -25,7 +25,7 @@ import tempfile
 
 ### Setup the simulation
 # Define the simulation path
-Sim_Path = os.path.join(tempfile.gettempdir(), 'RCS_Sphere_Simulation_Backscatter_Vis')
+Sim_Path = os.path.join(tempfile.gettempdir(), 'RCS_Spheres_Simulation_Backscatter_Vis')
 post_proc_only = False # Set to True to skip simulation run
 
 # All lengths in meters
@@ -43,7 +43,7 @@ PW_Box_z = 1  # meters
 FDTD = openEMS(EndCriteria=1e-3)
 
 f_start = 50e6   # Start frequency in Hz
-f_stop = 1000e6  # Stop frequency in Hz
+f_stop = 1500e6  # Stop frequency in Hz
 f0 = 0.5 * (f_start + f_stop)  # Center frequency
 
 FDTD.SetGaussExcite(f0, 0.5 * (f_stop - f_start))
@@ -75,9 +75,15 @@ mesh.SmoothMeshLines('z', mesh_resolution)
 
 ### Create five spheres in the y-z plane
 # Sphere parameters
-sphere_radius = 0.3  # 5 cm radius
+sphere_radius = 0.05  # 5 cm radius
 sphere_positions = [
-    [0,  0.0,  0.0]
+    [0, -0.3, -0.35],
+    [0, -0.3, 0.35],
+    [-0.3, -0.3, 0.0],
+    [0, 0.0, 0.0],
+    [0, 0.3, -0.25],
+    [0, 0.3, 0.25],
+    [0.3, 0.3, 0.0]
 ]
 
 # Add spheres to the simulation

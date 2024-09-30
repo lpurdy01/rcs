@@ -1,0 +1,20 @@
+### Add E-field dump
+E_dump = CSX.AddDump('E_dump', dump_type=0, file_type=0)
+E_dump.AddBox(start=start, stop=stop)
+
+# Construct dump boxes for backscatter
+E_dump_outside = CSX.AddDump('E_dump_outside', dump_type=0, file_type=0)
+H_dump_outside = CSX.AddDump('H_dump_outside', dump_type=1, file_type=0)
+
+E_dump_back = CSX.AddDump('E_dump_back', dump_type=0, file_type=1)
+H_dump_back = CSX.AddDump('H_dump_back', dump_type=1, file_type=1)
+
+backscatter_dump_thickness = mesh_resolution
+
+thin_dump_start = np.array([-PW_Box_x/2 - backscatter_dump_thickness, -PW_Box_y / 2, -PW_Box_z / 2])
+thin_dump_stop = np.array([-PW_Box_x/2 - 2*backscatter_dump_thickness, PW_Box_y / 2, PW_Box_z / 2])
+
+E_dump_outside.AddBox(start=thin_dump_start, stop=thin_dump_stop)
+H_dump_outside.AddBox(start=thin_dump_start, stop=thin_dump_stop)
+E_dump_back.AddBox(start=thin_dump_start, stop=thin_dump_stop)
+H_dump_back.AddBox(start=thin_dump_start, stop=thin_dump_stop)
