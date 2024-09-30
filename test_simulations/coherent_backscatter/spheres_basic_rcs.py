@@ -27,6 +27,7 @@ import tempfile
 # Define the simulation path
 Sim_Path = os.path.join(tempfile.gettempdir(), 'RCS_Spheres_Simulation')
 post_proc_only = False # Set to True to skip simulation run
+calc_reflected_image = True
 
 # All lengths in meters
 # Define the size of the simulation box in meters
@@ -43,7 +44,7 @@ PW_Box_z = 1  # meters
 FDTD = openEMS(EndCriteria=1e-3)
 
 f_start = 50e6   # Start frequency in Hz
-f_stop = 1000e6  # Stop frequency in Hz
+f_stop = 3000e6  # Stop frequency in Hz
 f0 = 0.5 * (f_start + f_stop)  # Center frequency
 
 FDTD.SetGaussExcite(f0, 0.5 * (f_stop - f_start))
@@ -75,7 +76,7 @@ mesh.SmoothMeshLines('z', mesh_resolution)
 
 ### Create five spheres in the y-z plane
 # Sphere parameters
-sphere_radius = 0.08  # 5 cm radius
+sphere_radius = 0.05  # 5 cm radius
 sphere_positions = [
     [0, -0.3, -0.35],
     [0, -0.3,  0.35],
@@ -163,10 +164,33 @@ if not post_proc_only:
     np.save(os.path.join(Sim_Path, 'freq.npy'), freq)
 
     # Calculate NF2FF over frequency at specific angle
-    nf2ff_res_freq = nf2ff.CalcNF2FF(Sim_Path, freq, 90, 0)
+    nf2ff_res_freq = nf2ff.CalcNF2FF(Sim_Path, freq, 90, 180)
 
     # Save NF2FF results over frequency
     np.save(os.path.join(Sim_Path, 'nf2ff_P_rad_freq.npy'), nf2ff_res_freq.P_rad)
+
+    if calc_reflected_image:
+        # Set up the grid parameters
+        num_points_y = 5  # Number of points along y-axis
+        num_points_z = 5  # Number of points along z-axis
+
+        y_range = np.linspace(-PW_Box_y / 2, PW_Box_y / 2, num_points_y)
+        z_range = np.linspace(-PW_Box_z / 2, PW_Box_z / 2, num_points_z)
+
+        nf2ff_grid = np.zeros((num_points_y, num_points_z))
+
+        # Loop over grid points and calculate NF2FF
+        for iy, y in enumerate(y_range):
+            print("Calculating NF2FF at y = ", y, " of ", y_range[-1])
+            for iz, z in enumerate(z_range):
+                center = [0, y, z]  # Fix x to 0 for the y z plane
+                nf2ff_res = nf2ff.CalcNF2FF(Sim_Path, f0, 90, 180, center=center, radius=3)
+                nf2ff_grid[iy, iz] = nf2ff_res.P_rad[0][0][0]  # Save the calculated RCS value to the grid
+
+        # Save the grid data to a numpy file for post-processing
+        np.save(os.path.join(Sim_Path, 'nf2ff_grid.npy'), nf2ff_grid)
+
+        print(f"NF2FF grid data saved as: {os.path.join(Sim_Path, 'nf2ff_grid.npy')}")
 
     # Save simulation parameters for post-processing
     sim_params = {
