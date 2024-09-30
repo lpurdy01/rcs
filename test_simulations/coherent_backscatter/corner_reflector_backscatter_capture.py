@@ -189,7 +189,7 @@ if not post_proc_only:
     np.save(os.path.join(Sim_Path, 'freq.npy'), freq)
 
     # Calculate NF2FF over frequency at specific angle
-    nf2ff_res_freq = nf2ff.CalcNF2FF(Sim_Path, freq, 90, 0)
+    nf2ff_res_freq = nf2ff.CalcNF2FF(Sim_Path, freq, 90, 180)
 
     # Save NF2FF results over frequency
     np.save(os.path.join(Sim_Path, 'nf2ff_P_rad_freq.npy'), nf2ff_res_freq.P_rad)
@@ -209,7 +209,7 @@ if not post_proc_only:
             print("Calculating NF2FF at y = ", y, " of ", y_range[-1])
             for iz, z in enumerate(z_range):
                 center = [0, y, z]  # Fix x to 0 for the y z plane
-                nf2ff_res = nf2ff.CalcNF2FF(Sim_Path, f0, 90, 0, center=center, radius=2)
+                nf2ff_res = nf2ff.CalcNF2FF(Sim_Path, f0, 90, 180, center=center, radius=2)
                 nf2ff_grid[iy, iz] = nf2ff_res.P_rad[0][0][0]  # Save the calculated RCS value to the grid
 
         # Save the grid data to a numpy file for post-processing

@@ -93,7 +93,7 @@ def post_process(sim_path):
 
 if __name__ == '__main__':
     # Set the simulation path
-    sim_path = os.path.join(tempfile.gettempdir(), 'RCS_STL_Target_Simulation')
+    sim_path = os.path.join(tempfile.gettempdir(), 'RCS_Little_Plane_Al')
 
     if not os.path.exists(sim_path):
         print(f"Simulation directory not found: {sim_path}")
