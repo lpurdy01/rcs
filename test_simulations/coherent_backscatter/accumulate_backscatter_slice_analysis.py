@@ -23,7 +23,7 @@ import tempfile
 matplotlib.use('Agg')  # Use non-interactive backend suitable for headless servers
 
 
-def accumulate_poynting_magnitude(sim_path, desired_direction=[-1, 0, 0], bias_factor=4, epsilon=1e-40, save_fig=True):
+def accumulate_poynting_magnitude(sim_path, desired_direction=[-1, 0, 0], bias_factor=5, epsilon=1e-40, save_fig=True):
     """
     Accumulate Poynting vector biases over all available timesteps.
 
@@ -114,7 +114,7 @@ def accumulate_poynting_magnitude(sim_path, desired_direction=[-1, 0, 0], bias_f
 
 if __name__ == '__main__':
     # Set the simulation path and base filename
-    sim_path = os.path.join(tempfile.gettempdir(), 'RCS_Little_Plane_Al')
+    sim_path = os.path.join(tempfile.gettempdir(), 'RCS_Little_Plane_Al_hi_frq')
 
     if not os.path.exists(sim_path):
         print(f"Simulation directory not found: {sim_path}")
