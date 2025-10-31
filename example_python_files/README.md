@@ -2,6 +2,16 @@
 
 This directory contains example electromagnetic simulation scripts using openEMS.
 
+## License Notice
+
+**Important**: The example files in this directory are derived from openEMS tutorials originally authored by Thorsten Liebig and are licensed under the **GNU General Public License v3 (GPL v3)**.
+
+- **Copyright**: (c) 2015-2023 Thorsten Liebig
+- **License**: GPL v3 (see LICENSE file in this directory)
+- **Source**: https://github.com/thliebig/openEMS-Project
+
+Each file retains its original copyright notice. If you modify or distribute these files, you must comply with the GPL v3 license terms.
+
 ## Available Examples
 
 ### Antenna Simulations

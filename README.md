@@ -1,6 +1,7 @@
 # RCS - Radar Cross Section Simulations with openEMS
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![openEMS](https://img.shields.io/badge/openEMS-v0.0.34+-green.svg)](https://openems.de/)
 
@@ -170,5 +171,12 @@ Contributions are welcome! Please feel free to submit pull requests or open issu
 
 ## License
 
-Please see the LICENSE file for details.
+This repository uses multiple licenses:
+
+- **Repository code, documentation, and setup scripts**: MIT License (see LICENSE file)
+- **Example Python files** (`example_python_files/`): GNU GPL v3 (derived from openEMS tutorials by Thorsten Liebig)
+
+The example simulation scripts are provided as standalone tutorials and are subject to the GPL v3 license. The MIT-licensed components (documentation, setup scripts, etc.) can be used independently.
+
+For complete licensing details, please see the LICENSE file in the root directory and the LICENSE file in the `example_python_files/` directory.
 
