@@ -1,5 +1,9 @@
 # RCS - Radar Cross Section Simulations with openEMS
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![openEMS](https://img.shields.io/badge/openEMS-v0.0.34+-green.svg)](https://openems.de/)
+
 This repository contains electromagnetic simulation examples and tools for computing Radar Cross Section (RCS) using openEMS, an open-source electromagnetic field solver.
 
 ## Overview
