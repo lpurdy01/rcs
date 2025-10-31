@@ -1,0 +1,71 @@
+# Licensing Information
+
+This repository contains code under multiple licenses. Please read carefully.
+
+## Repository Code (MIT License)
+
+The following components are licensed under the MIT License:
+
+- Documentation files (README.md, CONTRIBUTING.md, etc.)
+- Setup scripts (setup_scripts_and_notes/)
+- Test targets and STL models (test_targets/)
+- Configuration files (.gitignore, requirements.txt, etc.)
+- GitHub templates (.github/)
+
+### MIT License
+
+Copyright (c) 2024 lpurdy01
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+## Example Python Files (GPL v3 License)
+
+The Python simulation examples in the `example_python_files/` directory are
+derived from openEMS tutorials and are licensed under the GNU General Public
+License v3 (GPL v3).
+
+Copyright (c) 2015-2023 Thorsten Liebig <thorsten.liebig@gmx.de>
+
+These files are part of the openEMS project and are distributed under the
+terms of the GPL v3. See example_python_files/LICENSE for the full GPL v3
+license text.
+
+**Important**: The GPL v3 license is a copyleft license. If you modify or
+distribute these example files, or create derivative works, you must do so
+under the terms of the GPL v3 license.
+
+### Separation of Licenses
+
+The example Python files are provided as separate, standalone tutorial scripts
+and are not linked or integrated with the MIT-licensed portions of this
+repository. You may use the MIT-licensed components independently of the GPL
+v3 licensed examples.
+
+---
+
+## Third-Party Dependencies
+
+This repository depends on:
+- **openEMS**: GPL v3 licensed electromagnetic field solver
+- **CSXCAD**: GPL v3 licensed CAD library
+- **Python libraries**: Various licenses (see requirements.txt)
+
+When using this repository, please ensure compliance with all applicable licenses.
