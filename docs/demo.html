@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demo — RCS Simulations with openEMS</title>
+  <link rel="stylesheet" href="css/style.css">
+  <!-- MathJax for equations -->
+  <script>
+    MathJax = {
+      tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+
+  <header>
+    <nav class="site-nav">
+      <a href="index.html" class="nav-brand">RCS / openEMS</a>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="report.html">Report</a></li>
+        <li><a href="demo.html" class="active">Demo</a></li>
+        <li><a href="https://github.com/lpurdy01/rcs">GitHub</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <article>
+      <div class="article-meta">
+        <span class="tag">Electromagnetics</span>
+        <span class="tag">openEMS</span>
+        <span class="tag">Radar</span>
+      </div>
+
+      <h1>Radar Cross Section Simulations with openEMS</h1>
+
+      <p class="subtitle">
+        A practical guide to computing RCS for arbitrary geometries using open-source
+        electromagnetic field solvers.
+      </p>
+
+      <hr>
+
+      <!-- ARTICLE CONTENT GOES HERE -->
+      <section>
+        <h2>Introduction</h2>
+        <p>
+          Placeholder — replace this with your article content.
+        </p>
+      </section>
+
+      <section>
+        <h2>Example: Equation Block</h2>
+        <p>
+          Inline math works like this: $\sigma = \lim_{r \to \infty} 4\pi r^2 \frac{|E_s|^2}{|E_i|^2}$
+        </p>
+        <p>Display math:</p>
+        $$\sigma(\theta, \phi) = \lim_{r \to \infty} 4\pi r^2 \frac{|\mathbf{E}_s|^2}{|\mathbf{E}_i|^2}$$
+      </section>
+
+      <section>
+        <h2>Example: Code Block</h2>
+        <pre><code>import openems
+# your simulation code here
+</code></pre>
+      </section>
+
+      <section>
+        <h2>Example: Figure with Caption</h2>
+        <figure>
+          <img src="images/placeholder.png" alt="Simulation result" style="display:none">
+          <figcaption>Figure 1. Caption goes here.</figcaption>
+        </figure>
+      </section>
+
+    </article>
+  </main>
+
+  <footer>
+    <p>
+      Source code on <a href="https://github.com/lpurdy01/rcs">GitHub</a>.
+      Licensed under <a href="https://github.com/lpurdy01/rcs/blob/main/LICENSE">MIT / GPL v3</a>.
+    </p>
+  </footer>
+
+</body>
+</html>

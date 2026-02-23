@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Report — RCS Simulations with openEMS</title>
+  <link rel="stylesheet" href="css/style.css">
+  <!-- MathJax for equations -->
+  <script>
+    MathJax = {
+      tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+
+  <header>
+    <nav class="site-nav">
+      <a href="index.html" class="nav-brand">RCS / openEMS</a>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="report.html" class="active">Report</a></li>
+        <li><a href="demo.html">Demo</a></li>
+        <li><a href="https://github.com/lpurdy01/rcs">GitHub</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <article>
+      <div class="article-meta">
+        <span class="tag">Electromagnetics</span>
+        <span class="tag">openEMS</span>
+        <span class="tag">Radar</span>
+        <span class="tag">FDTD</span>
+      </div>
+
+      <h1>Spatial Radar Cross Section Attribution<br>Using Open-Source FDTD</h1>
+
+      <p class="subtitle">
+        How directional Poynting vector accumulation extracts spatial backscatter hot-spot maps
+        from full-wave field simulation data — and what a UAV actually looks like on radar.
+      </p>
+
+      <hr>
+
+      <!--
+        ═══════════════════════════════════════════════════════════════
+        REPORT CONTENT — GENERATED FROM report_composition.md
+        ═══════════════════════════════════════════════════════════════
+
+        This section is populated programmatically from:
+          docs/report_composition.md
+
+        RECOMMENDED WORKFLOW (Pandoc):
+
+          pandoc docs/report_composition.md \
+            --from markdown \
+            --to html \
+            --output report-content.html
+
+          Then paste the contents of report-content.html into the
+          <div id="report-content"> block below, replacing the
+          .report-placeholder element.
+
+        QUICK PYTHON ALTERNATIVE:
+
+          pip install markdown
+          python -c "
+          import markdown, pathlib
+          src = pathlib.Path('docs/report_composition.md').read_text()
+          html = markdown.markdown(
+              src, extensions=['tables', 'fenced_code', 'toc']
+          )
+          pathlib.Path('docs/report-content.html').write_text(html)
+          "
+
+          Then inject the output, or fetch() it at runtime.
+
+        FETCH AT RUNTIME (zero-build option):
+
+          If report-content.html is generated alongside this file,
+          the inline script below will load it automatically and
+          replace the placeholder. Just generate the file and commit.
+
+        IMAGE PATHS:
+          report_composition.md references images as:
+            report_images/<filename>
+          These resolve correctly relative to report.html.
+
+        MATH:
+          MathJax is loaded on this page. Dollar-sign delimiters
+          ($...$) in converted HTML will render automatically.
+        ═══════════════════════════════════════════════════════════════
+      -->
+
+      <div id="report-content">
+        <div class="report-placeholder">
+          <h3>Report content is generated from <code>report_composition.md</code></h3>
+          <p>
+            The full technical report is authored in
+            <a href="https://github.com/lpurdy01/rcs/blob/main/docs/report_composition.md"><code>docs/report_composition.md</code></a>
+            and converted to HTML for this page.
+          </p>
+          <p><strong>Option 1 — Pandoc (recommended):</strong></p>
+          <pre><code>pandoc docs/report_composition.md \
+  --from markdown --to html \
+  -o docs/report-content.html</code></pre>
+          <p><strong>Option 2 — Python markdown:</strong></p>
+          <pre><code>pip install markdown
+python -c "
+import markdown, pathlib
+src = pathlib.Path('docs/report_composition.md').read_text()
+html = markdown.markdown(src, extensions=['tables','fenced_code','toc'])
+pathlib.Path('docs/report-content.html').write_text(html)
+"</code></pre>
+          <p>
+            Once <code>report-content.html</code> exists in the <code>docs/</code> folder,
+            this page will load it automatically (see the inline script at the bottom of
+            this file).
+          </p>
+        </div>
+      </div>
+
+    </article>
+  </main>
+
+  <footer>
+    <p>
+      Source code on <a href="https://github.com/lpurdy01/rcs">GitHub</a>.
+      Licensed under <a href="https://github.com/lpurdy01/rcs/blob/main/LICENSE">MIT / GPL v3</a>.
+    </p>
+  </footer>
+
+  <!--
+    Automatically loads report-content.html into #report-content if it exists.
+    No build step required — just generate the file and commit it.
+  -->
+  <script>
+    fetch('report-content.html')
+      .then(function(res) {
+        if (!res.ok) return;
+        return res.text();
+      })
+      .then(function(html) {
+        if (html) {
+          document.getElementById('report-content').innerHTML = html;
+          if (window.MathJax) MathJax.typesetPromise();
+        }
+      })
+      .catch(function() {});
+  </script>
+
+</body>
+</html>

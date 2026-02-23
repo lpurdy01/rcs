@@ -5,79 +5,109 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RCS Simulations with openEMS</title>
   <link rel="stylesheet" href="css/style.css">
-  <!-- MathJax for equations -->
-  <script>
-    MathJax = {
-      tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
-      svg: { fontCache: 'global' }
-    };
-  </script>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 </head>
 <body>
+
   <header>
-    <nav>
-      <a href="https://github.com/lpurdy01/rcs" class="repo-link">&#8592; GitHub Repo</a>
+    <nav class="site-nav">
+      <a href="index.html" class="nav-brand">RCS / openEMS</a>
+      <ul class="nav-links">
+        <li><a href="index.html" class="active">Home</a></li>
+        <li><a href="report.html">Report</a></li>
+        <li><a href="demo.html">Demo</a></li>
+        <li><a href="https://github.com/lpurdy01/rcs">GitHub</a></li>
+      </ul>
     </nav>
   </header>
 
   <main>
-    <article>
-      <div class="article-meta">
+
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-tags">
         <span class="tag">Electromagnetics</span>
         <span class="tag">openEMS</span>
+        <span class="tag">FDTD</span>
         <span class="tag">Radar</span>
+        <span class="tag">Open Source</span>
       </div>
-
-      <h1>Radar Cross Section Simulations with openEMS</h1>
-
+      <h1>Radar Cross Section<br>Simulations with openEMS</h1>
       <p class="subtitle">
-        A practical guide to computing RCS for arbitrary geometries using open-source
-        electromagnetic field solvers.
+        Spatial backscatter attribution for arbitrary geometries — mapping which geometric features
+        actually dominate radar observability using open-source FDTD field simulation.
       </p>
+      <div class="hero-actions">
+        <a href="report.html" class="btn btn-primary">Read the Report</a>
+        <a href="https://github.com/lpurdy01/rcs" class="btn btn-secondary">GitHub Repo</a>
+      </div>
+    </section>
 
-      <hr>
+    <!-- Key Finding -->
+    <div class="callout">
+      <div class="callout-box">
+        <div class="callout-label">Key Finding</div>
+        <p>Engine cavities — not leading edges or wing tips — are the dominant backscatter
+        contributors in the simulated UAV geometry. The most visually prominent features are not
+        always the most radar-significant ones.</p>
+      </div>
+    </div>
 
-      <!-- ARTICLE CONTENT GOES HERE -->
-      <section>
-        <h2>Introduction</h2>
-        <p>
-          Placeholder — replace this with your article content.
-        </p>
-      </section>
+    <!-- Features -->
+    <section class="features">
+      <div class="feature-card">
+        <h3>Full-Wave FDTD</h3>
+        <p>openEMS-based simulation captures all scattering mechanisms: resonances, cavity effects,
+        diffraction, and surface currents — no physical optics approximations.</p>
+      </div>
+      <div class="feature-card">
+        <h3>Spatial Attribution</h3>
+        <p>Directional Poynting vector accumulation produces hot-spot maps showing which geometric
+        features contribute most to backscatter, without full ISAR reconstruction.</p>
+      </div>
+      <div class="feature-card">
+        <h3>Open Source</h3>
+        <p>All simulation scripts, geometry files, and analysis tools are freely available.
+        No commercial EM solver license required.</p>
+      </div>
+    </section>
 
-      <section>
-        <h2>Example: Equation Block</h2>
-        <p>
-          Inline math works like this: $\sigma = \lim_{r \to \infty} 4\pi r^2 \frac{|E_s|^2}{|E_i|^2}$
-        </p>
-        <p>Display math:</p>
-        $$\sigma(\theta, \phi) = \lim_{r \to \infty} 4\pi r^2 \frac{|\mathbf{E}_s|^2}{|\mathbf{E}_i|^2}$$
-      </section>
+    <!-- Tech Tree -->
+    <section class="visual-section">
+      <h2>Capability Maturity Model</h2>
+      <p>RCS simulation capability spans maturity levels from intuition-based reasoning (L0) through
+      closed-loop computational optimization (L5). This project demonstrates L1: spatial backscatter
+      attribution with canonical validation.</p>
+      <figure>
+        <img src="rcs_tech_tree.svg"
+             alt="RCS Simulation Capability Tech Tree showing maturity levels L0 through L5">
+        <figcaption>RCS simulation capability maturity model. Current work sits at L1 — spatial
+        backscatter attribution via directional Poynting vector accumulation, validated against a
+        canonical hollow aluminum sphere.</figcaption>
+      </figure>
+    </section>
 
-      <section>
-        <h2>Example: Code Block</h2>
-        <pre><code>import openems
-# your simulation code here
-</code></pre>
-      </section>
+    <!-- Polar Diagram -->
+    <section class="visual-section">
+      <h2>RCS as a Spatial Distribution</h2>
+      <p>Radar cross section is not a scalar value — it varies with aspect angle, frequency,
+      polarization, and target orientation. Treating it as a single number collapses the spatial
+      information needed to understand which features dominate.</p>
+      <figure>
+        <img src="figures/rcs_polar_diagram.svg"
+             alt="Polar diagram showing RCS vs observation angle">
+        <figcaption>Illustrative RCS polar plot. Backscatter intensity varies substantially with
+        aspect angle — a fact that scalar RCS metrics obscure.</figcaption>
+      </figure>
+    </section>
 
-      <section>
-        <h2>Example: Figure with Caption</h2>
-        <figure>
-          <img src="images/placeholder.png" alt="Simulation result" style="display:none">
-          <figcaption>Figure 1. Caption goes here.</figcaption>
-        </figure>
-      </section>
-
-    </article>
   </main>
 
   <footer>
     <p>
       Source code on <a href="https://github.com/lpurdy01/rcs">GitHub</a>.
-      Licensed under MIT / GPL v3.
+      Licensed under <a href="https://github.com/lpurdy01/rcs/blob/main/LICENSE">MIT / GPL v3</a>.
     </p>
   </footer>
+
 </body>
 </html>

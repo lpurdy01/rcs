@@ -1,0 +1,384 @@
+digraph RCS_Tech_Tree {
+
+  // ════════════════════════════════════════════════════════════════════
+  //  GLOBAL SETTINGS
+  // ════════════════════════════════════════════════════════════════════
+
+  bgcolor   = "#060e18"
+  rankdir   = TB
+  splines   = spline
+  nodesep   = 0.80
+  ranksep   = 3.0
+  pad       = 1.2
+
+  graph [
+    fontname  = "Helvetica"
+    fontcolor = "#9ab8d8"
+    fontsize  = 22
+    label     = "Radar Observability Design Maturity\n★  Gold border = current project capability  (L0, L1 maturity  ·  FDTD solver  ·  V1 validation)"
+    labelloc  = "t"
+    labeljust = "c"
+  ]
+
+  node [
+    fontname = "Helvetica"
+    fontcolor = "#d0e4f8"
+    style     = "filled,rounded"
+    shape     = rectangle
+    penwidth  = 1.5
+    margin    = "0.25,0.18"
+  ]
+
+  edge [
+    fontname  = "Helvetica"
+    fontcolor = "#607890"
+    fontsize  = 8.5
+    penwidth  = 1.5
+    arrowsize = 0.8
+    color     = "#3a5878"
+  ]
+
+
+  // ════════════════════════════════════════════════════════════════════
+  //  MATURITY SPINE  —  center column
+  //  Each node has a colored TIER banner as the first table row,
+  //  creating the sectioned game-tree visual.
+  // ════════════════════════════════════════════════════════════════════
+
+  L0 [
+    fillcolor = "#12202e"
+    color     = "#d4a800"
+    penwidth  = 4
+    margin    = 0
+    label     = <
+<TABLE BGCOLOR="#12202e" BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0">
+  <TR><TD BGCOLOR="#251a00" ALIGN="CENTER" CELLPADDING="10">
+    <FONT POINT-SIZE="10" COLOR="#c09020" FACE="Helvetica"><B>&#9670;&#9670;&#9670;&#160;&#160; TIER 0 &#160;&#160;&#9670;&#9670;&#9670;</B></FONT>
+  </TD></TR>
+  <TR><TD ALIGN="LEFT" CELLPADDING="16">
+    <B><FONT POINT-SIZE="15" COLOR="#ffd060" FACE="Helvetica">L0  &#183;  Intuition &amp; Unvalidated Simulation</FONT></B>
+  </TD></TR>
+  <TR><TD ALIGN="LEFT" CELLPADDING="16">
+    <FONT POINT-SIZE="11" COLOR="#9ab8d8" FACE="Helvetica"><I>Unlock: Geometric reasoning + first-run field data</I></FONT>
+  </TD></TR>
+  <TR><TD ALIGN="LEFT" CELLPADDING="16">
+    <FONT POINT-SIZE="11" COLOR="#c8daf0" FACE="Helvetica">&#8226; Single-aspect plane-wave simulation<BR ALIGN="LEFT"/>&#8226; Near-field visualization only<BR ALIGN="LEFT"/>&#8226; Manual geometry comparison<BR ALIGN="LEFT"/>&#8226; No calibrated measurements</FONT>
+  </TD></TR>
+  <TR><TD ALIGN="LEFT" CELLPADDING="16">
+    <FONT POINT-SIZE="10" COLOR="#506878" FACE="Helvetica"><I>Individual  |  Workstation compute</I></FONT>
+  </TD></TR>
+</TABLE>>
+  ]
+
+  L1 [
+    fillcolor = "#162435"
+    color     = "#d4a800"
+    penwidth  = 4
+    margin    = 0
+    label     = <
+<TABLE BGCOLOR="#162435" BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0">
+  <TR><TD BGCOLOR="#251a00" ALIGN="CENTER" CELLPADDING="10">
+    <FONT POINT-SIZE="10" COLOR="#c09020" FACE="Helvetica"><B>&#9670;&#9670;&#9670;&#160;&#160; TIER 1 &#160;&#160;&#9670;&#9670;&#9670;</B></FONT>
+  </TD></TR>
+  <TR><TD ALIGN="LEFT" CELLPADDING="16">
+    <B><FONT POINT-SIZE="15" COLOR="#ffd060" FACE="Helvetica">L1  &#183;  Spatial Attribution of Scattering</FONT></B>
+  </TD></TR>
+  <TR><TD ALIGN="LEFT" CELLPADDING="16">
+    <FONT POINT-SIZE="11" COLOR="#9ab8d8" FACE="Helvetica"><I>Unlock: &#8220;Where is the return coming from?&#8221;</I></FONT>
+  </TD></TR>
+  <TR><TD ALIGN="LEFT" CELLPADDING="16">
+    <FONT POINT-SIZE="11" COLOR="#c8daf0" FACE="Helvetica">&#8226; Backscatter hot-spot spatial mapping<BR ALIGN="LEFT"/>&#8226; Feature attribution: edges vs. cavities<BR ALIGN="LEFT"/>&#8226; Directional Poynting accumulation<BR ALIGN="LEFT"/>&#8226; Repeatable post-processing pipeline<BR ALIGN="LEFT"/>&#8226; Canonical geometry benchmarking</FONT>
+  </TD></TR>
+  <TR><TD ALIGN="LEFT" CELLPADDING="16">
+    <FONT POINT-SIZE="10" COLOR="#506878" FACE="Helvetica"><I>1&#8211;3 engineers  |  Structured workflow</I></FONT>
+  </TD></TR>
+</TABLE>>
+  ]
+
+  L2 [
+    fillcolor = "#1a2e4a"
+    color     = "#3a80c0"
+    penwidth  = 2.5
+    margin    = 0
+    label     = <
+<TABLE BGCOLOR="#1a2e4a" BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0">
+  <TR><TD BGCOLOR="#0e1e38" ALIGN="CENTER" CELLPADDING="10">
+    <FONT POINT-SIZE="10" COLOR="#4888b8" FACE="Helvetica"><B>&#9670;&#9670;&#9670;&#160;&#160; TIER 2 &#160;&#160;&#9670;&#9670;&#9670;</B></FONT>
+  </TD></TR>
+  <TR><TD ALIGN="LEFT" CELLPADDING="16">
+    <B><FONT POINT-SIZE="15" COLOR="#90c8f8" FACE="Helvetica">L2  &#183;  Parametric Observability Exploration</FONT></B>
+  </TD></TR>
+  <TR><TD ALIGN="LEFT" CELLPADDING="16">
+    <FONT POINT-SIZE="11" COLOR="#9ab8d8" FACE="Helvetica"><I>Unlock: &#8220;How does it change with angle, frequency, polarization?&#8221;</I></FONT>
+  </TD></TR>
+  <TR><TD ALIGN="LEFT" CELLPADDING="16">
+    <FONT POINT-SIZE="11" COLOR="#c8daf0" FACE="Helvetica">&#8226; Azimuth / elevation aspect sweeps<BR ALIGN="LEFT"/>&#8226; Frequency sweep analysis<BR ALIGN="LEFT"/>&#8226; Polarization comparison: HH / VV / HV<BR ALIGN="LEFT"/>&#8226; Multi-geometry morphology comparison<BR ALIGN="LEFT"/>&#8226; Scripted batch solver runs</FONT>
+  </TD></TR>
+  <TR><TD ALIGN="LEFT" CELLPADDING="16">
+    <FONT POINT-SIZE="10" COLOR="#506878" FACE="Helvetica"><I>Dedicated EM team  |  Shared compute cluster</I></FONT>
+  </TD></TR>
+</TABLE>>
+  ]
+
+  L3 [
+    fillcolor = "#1c3460"
+    color     = "#3a80c0"
+    penwidth  = 2.5
+    margin    = 0
+    label     = <
+<TABLE BGCOLOR="#1c3460" BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0">
+  <TR><TD BGCOLOR="#0e2040" ALIGN="CENTER" CELLPADDING="10">
+    <FONT POINT-SIZE="10" COLOR="#4888b8" FACE="Helvetica"><B>&#9670;&#9670;&#9670;&#160;&#160; TIER 3 &#160;&#160;&#9670;&#9670;&#9670;</B></FONT>
+  </TD></TR>
+  <TR><TD ALIGN="LEFT" CELLPADDING="16">
+    <B><FONT POINT-SIZE="15" COLOR="#70b0e8" FACE="Helvetica">L3  &#183;  Calibrated RCS Engineering</FONT></B>
+  </TD></TR>
+  <TR><TD ALIGN="LEFT" CELLPADDING="16">
+    <FONT POINT-SIZE="11" COLOR="#9ab8d8" FACE="Helvetica"><I>Unlock: &#8220;Can we trust the numbers?&#8221;</I></FONT>
+  </TD></TR>
+  <TR><TD ALIGN="LEFT" CELLPADDING="16">
+    <FONT POINT-SIZE="11" COLOR="#c8daf0" FACE="Helvetica">&#8226; Calibrated far-field RCS extraction<BR ALIGN="LEFT"/>&#8226; Bistatic scattering pattern analysis<BR ALIGN="LEFT"/>&#8226; Polarimetric characterization<BR ALIGN="LEFT"/>&#8226; Cross-solver verification<BR ALIGN="LEFT"/>&#8226; Geometry sensitivity mapping</FONT>
+  </TD></TR>
+  <TR><TD ALIGN="LEFT" CELLPADDING="16">
+    <FONT POINT-SIZE="10" COLOR="#506878" FACE="Helvetica"><I>Multi-discipline team  |  HPC cluster</I></FONT>
+  </TD></TR>
+</TABLE>>
+  ]
+
+  L4 [
+    fillcolor = "#123a70"
+    color     = "#3a80c0"
+    penwidth  = 2.5
+    margin    = 0
+    label     = <
+<TABLE BGCOLOR="#123a70" BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0">
+  <TR><TD BGCOLOR="#0a2248" ALIGN="CENTER" CELLPADDING="10">
+    <FONT POINT-SIZE="10" COLOR="#407898" FACE="Helvetica"><B>&#9670;&#9670;&#9670;&#160;&#160; TIER 4 &#160;&#160;&#9670;&#9670;&#9670;</B></FONT>
+  </TD></TR>
+  <TR><TD ALIGN="LEFT" CELLPADDING="16">
+    <B><FONT POINT-SIZE="15" COLOR="#50a0d8" FACE="Helvetica">L4  &#183;  Integrated Observability Design</FONT></B>
+  </TD></TR>
+  <TR><TD ALIGN="LEFT" CELLPADDING="16">
+    <FONT POINT-SIZE="11" COLOR="#9ab8d8" FACE="Helvetica"><I>Unlock: &#8220;Observability becomes a design variable.&#8221;</I></FONT>
+  </TD></TR>
+  <TR><TD ALIGN="LEFT" CELLPADDING="16">
+    <FONT POINT-SIZE="11" COLOR="#c8daf0" FACE="Helvetica">&#8226; Multi-aspect observability envelope<BR ALIGN="LEFT"/>&#8226; Aero / structure vs. observability trade studies<BR ALIGN="LEFT"/>&#8226; Monte Carlo design space exploration<BR ALIGN="LEFT"/>&#8226; Parametric airframe generation<BR ALIGN="LEFT"/>&#8226; Surrogate model acceleration</FONT>
+  </TD></TR>
+  <TR><TD ALIGN="LEFT" CELLPADDING="16">
+    <FONT POINT-SIZE="10" COLOR="#506878" FACE="Helvetica"><I>Program-level  |  EM + aero + structures team</I></FONT>
+  </TD></TR>
+</TABLE>>
+  ]
+
+  L5 [
+    fillcolor = "#0c3498"
+    color     = "#3a80c0"
+    penwidth  = 2.5
+    margin    = 0
+    label     = <
+<TABLE BGCOLOR="#0c3498" BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0">
+  <TR><TD BGCOLOR="#061a50" ALIGN="CENTER" CELLPADDING="10">
+    <FONT POINT-SIZE="10" COLOR="#3870a0" FACE="Helvetica"><B>&#9670;&#9670;&#9670;&#160;&#160; TIER 5 &#160;&#160;&#9670;&#9670;&#9670;</B></FONT>
+  </TD></TR>
+  <TR><TD ALIGN="LEFT" CELLPADDING="16">
+    <B><FONT POINT-SIZE="15" COLOR="#40a0ff" FACE="Helvetica">L5  &#183;  Closed-Loop Observability Optimization</FONT></B>
+  </TD></TR>
+  <TR><TD ALIGN="LEFT" CELLPADDING="16">
+    <FONT POINT-SIZE="11" COLOR="#9ab8d8" FACE="Helvetica"><I>Unlock: &#8220;Automated exploration and optimization of aircraft observability.&#8221;</I></FONT>
+  </TD></TR>
+  <TR><TD ALIGN="LEFT" CELLPADDING="16">
+    <FONT POINT-SIZE="11" COLOR="#c8daf0" FACE="Helvetica">&#8226; AI-driven geometry exploration<BR ALIGN="LEFT"/>&#8226; Monte Carlo + gradient refinement<BR ALIGN="LEFT"/>&#8226; Adjoint sensitivity methods<BR ALIGN="LEFT"/>&#8226; Surrogate-accelerated optimization<BR ALIGN="LEFT"/>&#8226; Uncertainty quantification</FONT>
+  </TD></TR>
+  <TR><TD ALIGN="LEFT" CELLPADDING="16">
+    <FONT POINT-SIZE="10" COLOR="#506878" FACE="Helvetica"><I>Major aerospace program  |  Formal EM discipline</I></FONT>
+  </TD></TR>
+</TABLE>>
+  ]
+
+  // Maturity spine progression
+  L0 -> L1 -> L2 -> L3 -> L4 -> L5
+    [penwidth=3 color="#4a90d8" arrowsize=1.1]
+
+
+  // ════════════════════════════════════════════════════════════════════
+  //  VALIDATION AXIS  —  left column
+  // ════════════════════════════════════════════════════════════════════
+
+  V0 [
+    fillcolor = "#0a1810"
+    color     = "#1a4028"
+    fontcolor = "#507060"
+    fontsize  = 11
+    label     = "V0  ·  No Validation\n\nAnecdotal correlation\nto known returns only"
+  ]
+
+  V1 [
+    fillcolor = "#0e2018"
+    color     = "#d4a800"
+    penwidth  = 3
+    fontcolor = "#80c888"
+    fontsize  = 11
+    label     = "V1  ·  Canonical Validation\n\nSphere comparison\nAnalytical benchmarks"
+  ]
+
+  V2 [
+    fillcolor = "#102818"
+    color     = "#206038"
+    fontcolor = "#80c888"
+    fontsize  = 11
+    label     = "V2  ·  Material Coupon Testing\n\nReflectivity measurement\nS-parameter extraction"
+  ]
+
+  V3 [
+    fillcolor = "#143020"
+    color     = "#286848"
+    fontcolor = "#90d0a0"
+    fontsize  = 11
+    label     = "V3  ·  Scaled Model Testing\n\nAnechoic chamber runs\nSubassembly validation"
+  ]
+
+  V4 [
+    fillcolor = "#183828"
+    color     = "#307858"
+    fontcolor = "#a0d8b0"
+    fontsize  = 11
+    label     = "V4  ·  Full Aircraft Range\n\nCompact / outdoor range\nFlight-based validation"
+  ]
+
+  V0 -> V1 -> V2 -> V3 -> V4 [color="#2a7050" penwidth=2]
+
+
+  // ════════════════════════════════════════════════════════════════════
+  //  SOLVER ENABLEMENT + AUTOMATION  —  right cluster, floating
+  //  Unicode note: − is U+2212 minus, ³ ² are superscripts (UTF-8 direct)
+  // ════════════════════════════════════════════════════════════════════
+
+  subgraph cluster_tools {
+    label     = "Solver Enablement  &  Automation Depth"
+    fontcolor = "#c0a0e8"
+    fontsize  = 11
+    style     = "dashed"
+    color     = "#4a2878"
+    bgcolor   = "#0c0618"
+
+    FDTD [
+      fillcolor = "#180c22"
+      color     = "#d4a800"
+      penwidth  = 3
+      fontcolor = "#d0a0f8"
+      fontsize  = 11
+      label     = "FDTD\nFinite-Difference Time-Domain\n\n+ Field-level physical insight\n+ Broadband single-run\n+ Cavity / transient physics\n\n− Grid scaling O(N³)\n− Large airframe size limits"
+    ]
+
+    FEM [
+      fillcolor = "#1c1028"
+      color     = "#6a3a98"
+      fontcolor = "#c090f0"
+      fontsize  = 11
+      label     = "FEM\nFinite Element Method\n\n+ Adaptive meshing\n+ Complex boundary conditions\n+ Cavity / material detail\n\n− Less suited for\n  open far-field scattering"
+    ]
+
+    MoM [
+      fillcolor = "#201430"
+      color     = "#6a3a98"
+      fontcolor = "#b080e8"
+      fontsize  = 11
+      label     = "MoM\nMethod of Moments\n\n+ Surface discretization\n+ Large metallic sweeps\n+ Design-space efficiency\n\n− Limited volumetric materials\n− Dense matrix O(N²)"
+    ]
+
+    A1 [
+      fillcolor = "#180e08"
+      color     = "#5a3810"
+      fontcolor = "#c07828"
+      fontsize  = 11
+      label     = "A1  ·  Scripted Batch Runs\n\nRepeatable pipelines\nBasic parameter loops"
+    ]
+
+    A2 [
+      fillcolor = "#1e1008"
+      color     = "#6a4818"
+      fontcolor = "#d08838"
+      fontsize  = 11
+      label     = "A2  ·  Parametric Sweeps\n\nStructured geometry\nexploration + data handling"
+    ]
+
+    A3 [
+      fillcolor = "#241408"
+      color     = "#7a5828"
+      fontcolor = "#d89848"
+      fontsize  = 11
+      label     = "A3  ·  Monte Carlo Exploration\n\nSensitivity mapping\nMulti-run comparison"
+    ]
+
+    A4 [
+      fillcolor = "#2a1a08"
+      color     = "#8a6838"
+      fontcolor = "#e0a858"
+      fontsize  = 11
+      label     = "A4  ·  Surrogate + Optimization\n\nML model acceleration\nMulti-objective loops\nAdjoint gradient descent"
+    ]
+
+    // Automation internal progression (constraint=false — rank handled externally)
+    A1 -> A2 -> A3 -> A4 [color="#7a5828" penwidth=2 constraint=false]
+  }
+
+
+  // ════════════════════════════════════════════════════════════════════
+  //  CROSS-EDGES  —  validation gates, solver unlocks, automation feeds
+  // ════════════════════════════════════════════════════════════════════
+
+  edge [style=dashed arrowsize=0.6 penwidth=1.2 fontsize=8 constraint=false]
+
+  // Validation gates (green)
+  V1 -> L1 [color="#30a060" xlabel="enables\nengineering"]
+  V2 -> L2 [color="#30a060" xlabel="improves\ncredibility"]
+  V3 -> L3 [color="#30a060" xlabel="required\nfor trust"]
+  V3 -> L4 [color="#30a060"]
+  V4 -> L5 [color="#30a060" xlabel="required\nfor closure"]
+
+  // Solver unlocks (purple) — dir=back: edge goes L→solver so arrowhead renders at L (points solver→spine)
+  L0 -> FDTD [color="#a060e0" dir=back]
+  L1 -> FDTD [color="#a060e0" dir=back]
+  L2 -> FDTD [color="#a060e0" dir=back]
+  L2 -> FEM  [color="#a060e0" dir=back]
+  L3 -> FEM  [color="#a060e0" dir=back]
+  L4 -> FEM  [color="#a060e0" dir=back]
+  L3 -> MoM  [color="#a060e0" dir=back]
+  L4 -> MoM  [color="#a060e0" dir=back]
+  L5 -> MoM  [color="#a060e0" dir=back]
+
+  // Automation feeds (amber) — same dir=back trick
+  L2 -> A1 [color="#c08040" dir=back]
+  L3 -> A2 [color="#c08040" dir=back]
+  L4 -> A3 [color="#c08040" dir=back]
+  L5 -> A4 [color="#c08040" dir=back]
+
+
+  // ════════════════════════════════════════════════════════════════════
+  //  RANK CONSTRAINTS  —  pin all columns to the same horizontal rows
+  // ════════════════════════════════════════════════════════════════════
+
+  { rank=same; V0; L0 }
+  { rank=same; V1; L1; FDTD }
+  { rank=same; V2; L2; A1 }
+  { rank=same; V3; L3; FEM; A2 }
+  { rank=same; V4; L4; MoM; A3 }
+  { rank=same; L5; A4 }
+
+
+  // ════════════════════════════════════════════════════════════════════
+  //  HORIZONTAL ORDERING  —  invisible same-rank edges enforce
+  //  left-to-right column order: Validation | Spine | Tools
+  // ════════════════════════════════════════════════════════════════════
+
+  // constraint=true here — rank=same prevents any vertical conflict,
+  // but the ordering hint is stronger than constraint=false for left-right placement.
+  edge [style=invis]
+  V0 -> L0
+  V1 -> L1 -> FDTD
+  V2 -> L2 -> A1
+  V3 -> L3 -> FEM -> A2
+  V4 -> L4 -> MoM -> A3
+  L5 -> A4
+
+}
