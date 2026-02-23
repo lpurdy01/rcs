@@ -5,14 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Report — RCS Simulations with openEMS</title>
   <link rel="stylesheet" href="css/style.css">
-  <!-- MathJax for equations -->
+  <!-- MathJax -->
   <script>
     MathJax = {
-      tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+      tex: {
+        inlineMath:  [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      },
       svg: { fontCache: 'global' }
     };
   </script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+  <!-- Mermaid (renders ```mermaid diagrams) -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true, theme: 'neutral' });</script>
 </head>
 <body>
 
@@ -48,80 +54,459 @@
 
       <!--
         ═══════════════════════════════════════════════════════════════
-        REPORT CONTENT — GENERATED FROM report_composition.md
-        ═══════════════════════════════════════════════════════════════
+        REPORT CONTENT — auto-generated from report_composition.md
 
-        This section is populated programmatically from:
-          docs/report_composition.md
+        To regenerate:
+            python3 docs/build_report.py
 
-        RECOMMENDED WORKFLOW (Pandoc):
-
-          pandoc docs/report_composition.md \
-            --from markdown \
-            --to html \
-            --output report-content.html
-
-          Then paste the contents of report-content.html into the
-          <div id="report-content"> block below, replacing the
-          .report-placeholder element.
-
-        QUICK PYTHON ALTERNATIVE:
-
-          pip install markdown
-          python -c "
-          import markdown, pathlib
-          src = pathlib.Path('docs/report_composition.md').read_text()
-          html = markdown.markdown(
-              src, extensions=['tables', 'fenced_code', 'toc']
-          )
-          pathlib.Path('docs/report-content.html').write_text(html)
-          "
-
-          Then inject the output, or fetch() it at runtime.
-
-        FETCH AT RUNTIME (zero-build option):
-
-          If report-content.html is generated alongside this file,
-          the inline script below will load it automatically and
-          replace the placeholder. Just generate the file and commit.
-
-        IMAGE PATHS:
-          report_composition.md references images as:
-            report_images/<filename>
-          These resolve correctly relative to report.html.
-
-        MATH:
-          MathJax is loaded on this page. Dollar-sign delimiters
-          ($...$) in converted HTML will render automatically.
+        Content is injected between the START/END markers below.
+        Safe to re-run; replaces whatever was injected previously.
         ═══════════════════════════════════════════════════════════════
       -->
-
       <div id="report-content">
-        <div class="report-placeholder">
-          <h3>Report content is generated from <code>report_composition.md</code></h3>
-          <p>
-            The full technical report is authored in
-            <a href="https://github.com/lpurdy01/rcs/blob/main/docs/report_composition.md"><code>docs/report_composition.md</code></a>
-            and converted to HTML for this page.
-          </p>
-          <p><strong>Option 1 — Pandoc (recommended):</strong></p>
-          <pre><code>pandoc docs/report_composition.md \
-  --from markdown --to html \
-  -o docs/report-content.html</code></pre>
-          <p><strong>Option 2 — Python markdown:</strong></p>
-          <pre><code>pip install markdown
-python -c "
-import markdown, pathlib
-src = pathlib.Path('docs/report_composition.md').read_text()
-html = markdown.markdown(src, extensions=['tables','fenced_code','toc'])
-pathlib.Path('docs/report-content.html').write_text(html)
-"</code></pre>
-          <p>
-            Once <code>report-content.html</code> exists in the <code>docs/</code> folder,
-            this page will load it automatically (see the inline script at the bottom of
-            this file).
-          </p>
-        </div>
+<!-- REPORT_CONTENT_START -->
+<h2 id="section-1-why-i-wanted-to-know-what-a-uav-looks-like-on-radar">Section 1 — Why I Wanted to Know What a UAV Looks Like on Radar</h2>
+<p>UAVs are everywhere now. Their proliferation has made radar observability a practical engineering concern—not just a defense niche. Whether you need a small drone to be reliably seen while operating in the National Airspace System, or you’re curious how difficult it actually is for a small aircraft to avoid detection, the same underlying question applies: <strong>what makes a UAV visible to radar, and can you evaluate that without a six-figure software license?</strong></p>
+<p>I expected this to be tractable. Find some open-source tools, run some geometry through them, get numbers. What I found instead is that the question itself is poorly posed—“how visible is this UAV on radar” is closer to asking “how long is a piece of string” than it first appears. The answer shifts with frequency, aspect angle, polarization, and which radar is doing the looking.</p>
+<p>More surprising was where the energy was actually coming from. When I modeled a small aluminum aircraft and looked at which parts of the geometry were driving backscatter, it wasn’t the wing edges or leading surfaces I’d expected. It was the engine cavities—visually subtle enclosed volumes that dominate return because of how they trap and re-radiate electromagnetic energy. The obvious geometric features weren’t the story.</p>
+
+<p>That observation pushed the project past simple number-getting. I wanted to understand <em>why</em> that number emerges and <em>which parts of the geometry are responsible</em>. Running alongside that: <strong>how complex is RCS-optimized aircraft design as an engineering problem?</strong> The tech tree in Section 9 maps that concretely. The short answer is: more complex than any single person can adequately address on a workstation, but the starting rungs are more accessible than the tooling landscape suggests.</p>
+<hr />
+<h2 id="section-2-radar-cross-section-is-not-a-number">Section 2 — Radar Cross Section is not “a number”</h2>
+<p>One of the first conceptual hurdles in this project was unlearning the idea that Radar Cross Section (RCS) is meaningfully described by a single scalar value. In casual discussion—and even in some engineering contexts—you will often hear statements like <em>“that aircraft looks like a small bird on radar.”</em> While not strictly wrong, this framing hides almost all of the complexity that actually governs radar observability.</p>
+<p>At a fundamental level, RCS is an abstraction. It is a quantity derived from how much electromagnetic energy is scattered back toward a radar receiver relative to the energy density of the incident wave. That definition already implies several layers of dependency: direction, frequency, polarization, and geometry. Compressing all of that into one number necessarily throws away information.</p>
+<figure><img alt="Illustrative polar plot of RCS vs observation angle" src="figures/rcs_polar_diagram.svg" /></figure>
+<p>In practice, an object does not have <em>an</em> RCS. It has an RCS <strong>distribution</strong>:</p>
+<ul>
+<li>As a function of aspect angle (azimuth and elevation)</li>
+<li>As a function of frequency and bandwidth</li>
+<li>As a function of polarization</li>
+<li>As a function of time, if the object is moving or vibrating</li>
+</ul>
+<p>Even for a rigid airframe at a fixed orientation, RCS is better thought of as the result of <strong>many localized scattering mechanisms summing coherently or incoherently</strong>, depending on the radar waveform and processing chain.</p>
+<p>These scattering mechanisms include:</p>
+<ul>
+<li>Specular reflections from large smooth surfaces</li>
+<li>Diffraction from edges and tips</li>
+<li>Creeping waves around curved bodies</li>
+<li>Resonant behavior in cavities and enclosed volumes</li>
+<li>Re-radiation from induced surface currents</li>
+<li>Coupling into internal structures that then leak energy back out</li>
+</ul>
+<p>What makes this especially unintuitive is that the visually “obvious” features of an aircraft are not always the dominant contributors. In my early experiments with a small aluminum model aircraft, the strongest radar return did not come from the wings, tail, or leading edges. Instead, it originated primarily from the <strong>engine cavities</strong>—regions that are visually subtle but electromagnetically significant due to their geometry, depth, and ability to support resonant fields.</p>
+<p>This is where the scalar notion of RCS becomes actively misleading. A single number cannot tell you:</p>
+<ul>
+<li><em>Which</em> parts of the airframe are responsible for observability</li>
+<li><em>Why</em> a small geometric change produces a large RCS swing</li>
+<li><em>How</em> observability shifts with angle or frequency</li>
+<li><em>Where</em> mitigation efforts should be focused</li>
+</ul>
+<p>From a design perspective, this matters enormously. Optimizing radar observability requires understanding <strong>cause and effect</strong>, not just outcome. Finding a local minimum in RCS space is only meaningful if you know what physical mechanisms are driving the solution there. Otherwise, optimization becomes blind parameter tuning.</p>
+<p>This realization naturally leads to imaging-style representations of scattering behavior. If radar observability is the result of spatially distributed scattering centers, then visualizing those centers—rather than collapsing them into a single metric—becomes a powerful diagnostic tool. ISAR images are one such representation, but they are not the only way to think about the problem.</p>
+<p>The rest of this article builds on that idea: treating radar observability as an emergent property of spatial electromagnetic interactions, and exploring how much of that structure can be recovered using open-source, field-level simulation data rather than proprietary, end-to-end RCS pipelines.</p>
+<h2 id="section-3-what-spatial-radar-insight-actually-looks-like-isar-as-reference">Section 3 — What spatial radar insight actually looks like (ISAR as reference)</h2>
+<p>If RCS is not a number but a distribution of spatially separated scattering mechanisms, then the next logical step is to ask: <strong>what does that distribution look like when we can actually see it?</strong></p>
+<p>One of the clearest demonstrations of this idea comes from Inverse Synthetic Aperture Radar (ISAR). Unlike a simple RCS measurement at a single aspect, ISAR exploits motion—either of the target or the radar—to synthesize a larger aperture and form an image. The result is not just a magnitude of reflection, but a spatial map of scattering intensity across the object.</p>
+<figure><img alt="ISAR simulation from ANSYS showing spatial scattering centers on an aircraft" src="report_images/ISAR_view_from_commertial_tool.png" /><figcaption><em>Spatial scattering map from ANSYS full-wave simulation, showing which features of the airframe dominate radar return. Source: <a href="https://www.youtube.com/watch?v=oF7ETNdGHuw">Simulation technologies for predicting radar signatures (Radar Cross Section)</a></em></figcaption></figure>
+<p>What makes images like this compelling is not that they produce a prettier version of RCS. It is that they reveal <strong>where</strong> energy originates.</p>
+<p>Bright regions in an ISAR image typically correspond to dominant scattering centers:</p>
+<ul>
+<li>Sharp leading edges</li>
+<li>Engine inlets</li>
+<li>Control surface gaps</li>
+<li>Vertical stabilizers</li>
+<li>Cavities or metallic discontinuities</li>
+<li>Regions of specular alignment</li>
+</ul>
+<p>Instead of asking “what is the RCS of this aircraft?”, ISAR allows you to ask:</p>
+<ul>
+<li>Which components are contributing most strongly?</li>
+<li>Are those contributions stable across angle?</li>
+<li>Are they coherent or fluctuating?</li>
+<li>Are they geometric or resonant in origin?</li>
+</ul>
+<p>This is exactly the kind of information required for design iteration. If a cavity is dominating return, you redesign the cavity. If a wing root junction is lighting up, you modify the fillet or angle. The image becomes a diagnostic instrument.</p>
+<p>However, generating ISAR imagery is not trivial. It requires:</p>
+<ul>
+<li>Coherent phase tracking</li>
+<li>Controlled target motion or angular sweep</li>
+<li>Signal processing over multiple pulses</li>
+<li>Often frequency diversity</li>
+<li>Robust near-to-far field transformations</li>
+</ul>
+<p>Commercial EM solvers integrate these workflows into polished toolchains. In open-source environments, those capabilities are far less turnkey.</p>
+<p>At this point in the project, I had to decide:
+Was the goal to recreate full ISAR processing from scratch, or to extract the underlying <em>physical intuition</em> in a more direct way?</p>
+<p>The core question became:</p>
+<blockquote>
+<p>Can spatial radar insight be approximated directly from field-level simulation data, without reconstructing a full synthetic aperture imaging chain?</p>
+</blockquote>
+<p>This question set the direction for the rest of the investigation. Rather than attempting to replicate the entire radar signal processing stack, I began exploring what could be derived directly from time-domain electromagnetic fields — specifically, whether energy flow itself could be used as a proxy for spatial backscatter behavior.</p>
+<p>The next step was understanding what tools were realistically available in open source, and how far they could be pushed.</p>
+<h2 id="section-4-the-tooling-landscape-between-closed-commercial-solvers-and-incomplete-open-options">Section 4 — The tooling landscape: between closed commercial solvers and incomplete open options</h2>
+<p>At this point the problem became less about physics and more about tooling.</p>
+<p>If spatial radar insight exists—and if commercial solvers clearly demonstrate that it can be extracted—then what are the realistic options for someone trying to explore radar observability outside of a large defense contractor or well-funded research lab?</p>
+<p>Broadly, the landscape splits into two categories:</p>
+<h3 id="commercial-full-wave-solvers">Commercial full-wave solvers</h3>
+<p>Tools like Ansys HFSS, CST Microwave Studio, and specialized RCS packages such as cadRCS provide:</p>
+<ul>
+<li>Mature meshing and solver pipelines</li>
+<li>Built-in far-field and near-field transforms</li>
+<li>Automated angular sweeps</li>
+<li>Frequency sweeps and polarization studies</li>
+<li>ISAR and scattering visualizations</li>
+<li>Material libraries and advanced boundary models</li>
+</ul>
+<p>They are powerful and well-supported. They are also expensive, license-restricted, and often tied to organizational access.</p>
+<p>More importantly, they are highly integrated systems. You rarely see the raw electromagnetic plumbing underneath the visualization. For learning and experimentation, that abstraction can be both a benefit and a limitation.</p>
+<h3 id="semi-analytical-or-simplified-scattering-methods">Semi-analytical or simplified scattering methods</h3>
+<p>My first instinct was not to jump directly into full-wave simulation. I initially looked for something lighter weight:</p>
+<ul>
+<li>Physical Optics (PO) implementations</li>
+<li>Physical Theory of Diffraction (PTD)</li>
+<li>Method of Edge Waves (as in Ufimtsev’s work)</li>
+<li>High-frequency approximations suitable for metallic airframes</li>
+</ul>
+<p>The idea was appealing: use geometry and known diffraction models to approximate scattering without solving Maxwell’s equations everywhere in space.</p>
+<p>However, despite searching, I was unable to find robust, open-source implementations of these methods that could be readily applied to arbitrary UAV geometries. The academic literature exists. The algorithms exist in principle. But practical, open workflows were not easily discoverable.</p>
+<p>That effectively forced the problem back toward full electromagnetic simulation.</p>
+<h3 id="why-full-wave-simulation-became-the-practical-path">Why full-wave simulation became the practical path</h3>
+<p>If I could not find a reliable edge-diffraction or physical-optics implementation, then the remaining path was to use a full-wave solver capable of:</p>
+<ul>
+<li>Plane-wave excitation</li>
+<li>Arbitrary STL geometry import</li>
+<li>Field-level data export</li>
+<li>Near-to-far field transformation (at least in principle)</li>
+</ul>
+<p>In the open-source ecosystem, <strong>openEMS</strong> stood out for several reasons:</p>
+<ul>
+<li>It implements a Finite-Difference Time-Domain (FDTD) solver.</li>
+<li>It includes example RCS calculations (notably a sphere compared against analytical results).</li>
+<li>It exports volumetric field data that can be post-processed externally.</li>
+<li>It integrates with Python, ParaView, and standard scientific tooling.</li>
+</ul>
+<p>The sphere example was particularly important. It showed that the solver could reproduce canonical scattering behavior with reasonable agreement to theory. That established a baseline level of trust.</p>
+<p>There was also a secondary motivation: even if the RCS investigation proved difficult, learning a full EM solver would have independent value. I’ve long been interested in antenna design, PCB electromagnetic effects, and microwave structures. Investing time in an open, transparent FDTD framework would pay dividends beyond this specific problem.</p>
+<p>So openEMS became the starting point—not because it was turnkey for UAV RCS studies, but because it was sufficiently capable and sufficiently open to allow experimentation.</p>
+<figure><img alt="Simulation space components for the openEMS FDTD setup" src="report_images/Explination_of_sim_space_components.png" /></figure>
+<h3 id="the-real-constraint-interpretation-not-simulation">The real constraint: interpretation, not simulation</h3>
+<p>Once openEMS was running and generating fields, a new reality emerged:</p>
+<p>Simulation was not the bottleneck.
+Interpretation was.</p>
+<p>It is relatively straightforward to:</p>
+<ul>
+<li>Define a plane-wave excitation</li>
+<li>Import an STL model of a geometry</li>
+<li>Run a time-domain simulation</li>
+<li>Dump electric and magnetic fields</li>
+</ul>
+<p>What is far less straightforward is converting that raw field data into something resembling <em>design intuition</em>.</p>
+<p>At this stage, I had:</p>
+<ul>
+<li>Time-resolved E-field data</li>
+<li>Time-resolved H-field data</li>
+<li>Volumetric snapshots across the simulation domain</li>
+</ul>
+<p>But I did not yet have:</p>
+<ul>
+<li>A clear spatial map of backscatter contribution</li>
+<li>An ISAR-style hot spot visualization</li>
+<li>A simple diagnostic for “what is radiating back toward the source”</li>
+</ul>
+<p>This gap between simulation output and actionable insight became the central technical challenge of the project.</p>
+<hr />
+<h2 id="section-5-full-wave-simulation-gives-you-physics-and-too-much-of-it">Section 5 — Full-wave simulation gives you physics… and too much of it</h2>
+<p>Once openEMS was configured and producing field data, I had crossed an important threshold: I could now illuminate arbitrary STL geometries with a plane wave and observe the resulting electromagnetic response. In principle, that means the physics of scattering is fully captured. Maxwell’s equations are being solved across space and time. Surface currents form. Diffraction occurs. Energy radiates.</p>
+<p>In practice, however, what you receive is not insight — it is data.</p>
+<p>Time-domain FDTD simulation produces volumetric electric and magnetic field snapshots. At each time step, every voxel in the simulation domain contains a vector field value. That is an extraordinary amount of information. It is also not directly interpretable.</p>
+<p>To understand what that looks like, consider a field slice through a simulated aircraft-like geometry:</p>
+<p>At first glance, this is impressive. You can see interference patterns, standing waves, and complex field interactions around the airframe. The geometry is clearly interacting with the incident wave. But what does this tell us about observability?</p>
+<p>Several challenges become immediately apparent:</p>
+<ul>
+<li>Field magnitude alone does not indicate direction of energy flow.</li>
+<li>Strong local fields may represent stored energy rather than radiated energy.</li>
+<li>It is difficult to distinguish between forward-scattered and back-scattered components.</li>
+<li>Interference patterns obscure which structures are persistently contributing to return.</li>
+</ul>
+<p>Near-field visualizations are valuable for debugging and qualitative intuition, but they do not answer the design-oriented questions posed earlier:</p>
+<ul>
+<li>Which parts of the airframe are dominating backscatter?</li>
+<li>Are those contributions stable over time?</li>
+<li>Is the dominant mechanism specular reflection, diffraction, or cavity resonance?</li>
+<li>If I modify a feature, how will the return shift spatially?</li>
+</ul>
+<p>The raw E-field slice is too low-level. It shows the electromagnetic solution but not its meaning in the context of radar observability.</p>
+<p>This problem becomes even clearer when examining canonical geometries. Consider the hollow conducting sphere case used as a validation example:</p>
+<figure><img alt="Hollow aluminum reference sphere with annotated backscatter accumulation result" src="report_images/hollow_refrence_AL_shpere_annotated.png" /><figcaption><em>The hollow metallic sphere under plane wave illumination. The symmetric scattering pattern is analytically well-characterized — making it a useful sanity check for the simulation before applying the same approach to more complex geometries.</em></figcaption></figure>
+<p>The symmetry is beautiful. The scattering behavior is consistent with expectation. But again, while the fields demonstrate correct physics, they do not immediately reveal a spatial “map” of backscatter contribution.</p>
+<p>At this point, a realization emerged:</p>
+<blockquote>
+<p>If I want something resembling an ISAR-style hot spot image, I need to extract directional energy information from the fields themselves.</p>
+</blockquote>
+<p>Field magnitude is insufficient. What matters for radar return is <strong>energy flow back toward the source</strong>. That is a directional quantity.</p>
+<p>The electromagnetic quantity that encodes directional energy transport is the <strong>Poynting vector</strong>:</p>
+<p>$$
+\mathbf{S} = \mathbf{E} \times \mathbf{H}
+$$</p>
+<p>Unlike field magnitude alone, the Poynting vector provides both magnitude and direction of instantaneous power flow. It answers a much more relevant question:</p>
+<ul>
+<li>Where is energy flowing?</li>
+<li>In which direction?</li>
+<li>And how persistently?</li>
+</ul>
+<p>This observation reframed the problem. Rather than reconstructing a full ISAR processing chain, perhaps it was possible to use the Poynting vector directly to approximate spatial backscatter behavior.</p>
+<p>The next section describes the directional projection and temporal accumulation method that emerged from this idea.</p>
+<h2 id="section-6-directional-poynting-vector-accumulation-as-a-backscatter-proxy">Section 6 — Directional Poynting vector accumulation as a backscatter proxy</h2>
+<p>Instead of reconstructing radar signal processing, I reframed the question:</p>
+<blockquote>
+<p>Over the course of the simulation, where is electromagnetic energy persistently flowing back toward the source?</p>
+</blockquote>
+<p>The quantity that directly captures this is the <strong>Poynting vector</strong> — the cross product of the electric and magnetic fields, giving instantaneous power flow density (W/m²). Unlike field magnitude alone, it carries directional information: it distinguishes energy radiating away from the geometry from energy heading back toward the radar.</p>
+<p>The method works in six steps:</p>
+<pre class="mermaid">flowchart TD
+    A[&quot;① Load E and H fields\nfor each timestep&quot;] --&gt; B[&quot;② Compute Poynting vector\nS = E × H&quot;]
+    B --&gt; C[&quot;③ Project onto backscatter direction\nS_proj = S · (−d̂)&quot;]
+    C --&gt; D[&quot;④ Clip: retain only\nbackward-traveling energy\nS_back = max(S_proj, 0)&quot;]
+    D --&gt; E[&quot;⑤ Apply nonlinear bias\nS_biased = |S_back|ⁿ\n(n = 3–5)&quot;]
+    E --&gt; F[&quot;⑥ Accumulate over time\nS_accum += S_biased\nthen log₁₀ scale&quot;]
+    F --&gt; G[&quot;Spatial backscatter\nhot-spot map&quot;]
+
+    style A fill:#1e3a5f,color:#fff
+    style B fill:#1e3a5f,color:#fff
+    style C fill:#2d6a4f,color:#fff
+    style D fill:#2d6a4f,color:#fff
+    style E fill:#7b4f12,color:#fff
+    style F fill:#7b4f12,color:#fff
+    style G fill:#6b1a1a,color:#fff,stroke:#ffd700,stroke-width:3px
+</pre>
+<p>Steps 1–3 are mechanical: compute the Poynting vector at each timestep, project it onto the backscatter direction (opposite to the incident wave), and clip the result to retain only backward-traveling energy. Steps 4–5 are where the real choices happen. The nonlinear bias — raising projected power to an integer exponent — suppresses weak noise while reinforcing persistently aligned regions. It is not physically fundamental; it is a visualization parameter that significantly improves spatial interpretability. Step 6 accumulates across all timesteps: transient oscillations cancel, persistent scattering centers reinforce. Log scaling handles the resulting dynamic range.</p>
+<figure><img alt="Reflection plane captured by the directional Poynting projection" src="report_images/Reflection_plane_captured_by_poynting_vector.png" /><figcaption><em>The directional Poynting projection applied to a plane cut through the simulation domain. Bright regions indicate persistent backscatter-aligned energy flow.</em></figcaption></figure>
+<table>
+<thead>
+<tr>
+<th>What it is</th>
+<th>What it is not</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Physically grounded energy-flow diagnostic</td>
+<td>Calibrated RCS measurement</td>
+</tr>
+<tr>
+<td>Directionally meaningful</td>
+<td>Replacement for near-to-far field integration</td>
+</tr>
+<tr>
+<td>Sensitive to geometry</td>
+<td>Substitute for full ISAR processing</td>
+</tr>
+<tr>
+<td>Reproducible with open-source tools</td>
+<td>Immune to bias parameter selection</td>
+</tr>
+</tbody>
+</table>
+<p>The output is <strong>design intuition</strong>: which regions of the geometry persistently direct energy back toward the source. For early-stage exploration, that is often more actionable than a single scalar RCS value.</p>
+<h2 id="section-7-what-the-method-reveals-cavities-edges-and-dominant-contributors">Section 7 — What the method reveals: cavities, edges, and dominant contributors</h2>
+<p>With the directional Poynting accumulation implemented, the next question was simple:</p>
+<p>What does it actually show?</p>
+<p>There are two useful categories of geometry to evaluate:</p>
+<ol>
+<li><strong>Canonical shapes</strong>, where scattering behavior is well understood.</li>
+<li><strong>Complex aircraft-like geometries</strong>, where intuition is less reliable.</li>
+</ol>
+<hr />
+<h3 id="canonical-validation-the-hollow-conducting-sphere">Canonical validation — the hollow conducting sphere</h3>
+<p>The hollow metallic sphere serves as a sanity check. Its scattering behavior is symmetric and analytically well characterized. In the far field, a sphere produces smooth angular dependence without localized geometric features.</p>
+<p>When applying the directional accumulation method to the sphere case:</p>
+<ul>
+<li>The resulting spatial map is symmetric.</li>
+<li>No artificial “hot spots” appear.</li>
+<li>Backscatter energy concentrates along expected geometric regions.</li>
+<li>The method does not introduce directional artifacts unrelated to the incident wave.</li>
+</ul>
+<p>This validation matters. Any post-processing pipeline that artificially emphasizes arbitrary grid features or simulation noise would immediately reveal itself in the canonical case. The sphere confirms that the accumulation approach respects symmetry and does not fabricate structure.</p>
+<figure><img alt="Hollow aluminum sphere with annotated backscatter accumulation result" src="report_images/hollow_refrence_AL_shpere_annotated.png" /><figcaption><em>Directional Poynting accumulation applied to the hollow metallic sphere. The symmetric hot-spot pattern confirms that the method is not introducing directional artifacts — the return concentrates where physics dictates.</em></figcaption></figure>
+<p>Validation was also extended by placing patterns of multiple spheres into the simulation domain and confirming that the resulting backscatter maps reproduced the spatial arrangement of spheres—not some artifact of the grid.</p>
+<p>It builds confidence that when asymmetry appears in more complex geometries, it is coming from the geometry — not the math.</p>
+<hr />
+<h3 id="aircraft-like-geometry-intuition-versus-reality">Aircraft-like geometry — intuition versus reality</h3>
+<p>The more interesting results came from the aluminum model aircraft geometry.</p>
+<p>Prior to running the accumulation method, I expected dominant scattering to originate from:</p>
+<ul>
+<li>Leading edges</li>
+<li>Wing tips</li>
+<li>Vertical stabilizers</li>
+<li>Sharp geometric discontinuities</li>
+</ul>
+<p>These are the textbook scattering features often emphasized in diffraction-based discussions.</p>
+<p>What the accumulated directional Poynting projection revealed was different.</p>
+<p>The strongest persistent backscatter contribution did not come primarily from wing edges. Instead, the most intense regions were located near the <strong>engine cavities</strong>.</p>
+<p>This observation aligns with electromagnetic intuition but contradicts visual intuition.</p>
+<p>Cavities can behave as:</p>
+<ul>
+<li>Resonant volumes</li>
+<li>Waveguides</li>
+<li>Energy traps that reradiate coherently</li>
+<li>Structures that allow multiple internal reflections before re-emission</li>
+</ul>
+<p>Even if externally subtle, these geometries can dominate return because they sustain internal field buildup before coupling energy back out.</p>
+<p>This highlights an important lesson:</p>
+<blockquote>
+<p>Radar observability is not always governed by the most visually prominent features. It is governed by electromagnetic behavior.</p>
+</blockquote>
+<hr />
+<h3 id="edges-versus-cavities-complementary-mechanisms">Edges versus cavities — complementary mechanisms</h3>
+<p>The results suggest that UAV observability emerges from a mixture of mechanisms:</p>
+<p><strong>Edges and discontinuities</strong></p>
+<ul>
+<li>Produce strong specular reflections</li>
+<li>Generate diffraction and creeping waves</li>
+<li>Often aspect-dependent and angle-sensitive</li>
+</ul>
+<p><strong>Cavities and internal volumes</strong></p>
+<ul>
+<li>Support resonant field buildup</li>
+<li>Produce persistent directional radiation</li>
+<li>May dominate return across multiple time steps</li>
+</ul>
+<p>These mechanisms are not mutually exclusive. Their relative importance shifts with:</p>
+<ul>
+<li>Frequency</li>
+<li>Illumination angle</li>
+<li>Polarization</li>
+<li>Cavity depth-to-wavelength ratio</li>
+</ul>
+<p>In a design context, this means mitigation strategies must be geometry-specific. Reducing edge sharpness may have little impact if a cavity resonance dominates return.</p>
+<figure><img alt="Accumulated directional Poynting projection for the aluminum aircraft geometry, with engine cavities annotated" src="report_images/Engine_cavity_annotated_accumulated_biased_poynting_log_scale_image.png" /><figcaption><em>Backscatter hot-spot map for the aluminum aircraft geometry. The dominant contributors are the engine cavities, not the wing edges or tail surfaces — a result that contradicts visual intuition but is consistent with electromagnetic behavior.</em></figcaption></figure>
+<hr />
+<h3 id="what-this-reveals-about-observability-as-a-design-problem">What this reveals about observability as a design problem</h3>
+<p>This experiment reinforces a broader conclusion:</p>
+<p>Optimizing radar observability is not a simple geometric smoothing exercise. It is a coupled electromagnetic design problem.</p>
+<p>If a cavity dominates return:</p>
+<ul>
+<li>Changing external curvature may not matter.</li>
+<li>Internal geometry may need to be modified.</li>
+<li>Absorbing treatments might be more effective than reshaping.</li>
+</ul>
+<p>If edges dominate:</p>
+<ul>
+<li>Planform changes may significantly alter observability.</li>
+<li>Alignment strategies could be impactful.</li>
+</ul>
+<p>Without spatial insight, these decisions are blind.</p>
+<p>The directional Poynting accumulation method does not provide an absolute RCS value. It does not produce a formal ISAR image. But it does provide something actionable:</p>
+<p>A spatial map of persistent backscatter contributors.</p>
+<p>That map allows qualitative comparisons between morphologies and helps answer the original guiding question:</p>
+<p><strong>What is actually making this UAV visible to radar?</strong></p>
+<h2 id="section-8-assumptions-limitations-and-what-this-workflow-does-not-capture">Section 8 — Assumptions, limitations, and what this workflow does not capture</h2>
+<p>Any result is only as meaningful as its stated assumptions. The directional Poynting accumulation method operates under a deliberately narrow set of conditions. The table below summarizes what those assumptions cost.</p>
+<table>
+<thead>
+<tr>
+<th>Assumption</th>
+<th>What it means in practice</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Single illumination angle and polarization</strong></td>
+<td>Aspect dependence is invisible. A geometry quiet head-on may be highly reflective broadside. Full characterization requires sweeping azimuth, elevation, and polarization — multiplying solver runs combinatorially.</td>
+</tr>
+<tr>
+<td><strong>Narrowband excitation</strong></td>
+<td>Different frequencies illuminate different features. Long wavelengths see overall body shape; short wavelengths resolve smaller discontinuities; cavities can resonate at specific bands. A single-frequency snapshot may miss significant behavior.</td>
+</tr>
+<tr>
+<td><strong>Near-field energy flow only</strong></td>
+<td>The output is diagnostic, not quantitative. No calibrated RCS value in m² is produced. openEMS supports near-to-far field transforms, but that pipeline was not integrated here.</td>
+</tr>
+<tr>
+<td><strong>Power accumulation, not coherent phase</strong></td>
+<td>Phase relationships across timesteps are discarded. The method cannot resolve range bins, reconstruct radar images, or capture micro-Doppler from rotating propellers or vibrating surfaces.</td>
+</tr>
+<tr>
+<td><strong>Conductive materials only</strong></td>
+<td>Real UAVs use carbon fiber composites, radomes, absorbers, and multilayer structures. Material properties significantly affect scattering; this workflow does not model them.</td>
+</tr>
+<tr>
+<td><strong>Free-space propagation</strong></td>
+<td>No ground plane, multipath, clutter, or atmospheric effects. Operational radar observability is heavily environment-dependent — ground reflections alone can drastically alter effective return.</td>
+</tr>
+</tbody>
+</table>
+<p>Taken together, these define a single node in a large parameter space: <strong>single-aspect, single-frequency, field-level directional energy analysis in free space, on a conductive airframe.</strong> That is a narrow slice. It is also the slice where the core question — which geometric features dominate backscatter — can be examined cleanly without confounds.</p>
+<p>The complexity of radar observability doesn’t come from solving Maxwell’s equations once. It comes from exploring the parameter space around that solution. Each additional dimension — angle, frequency, polarization, material, environment — expands the problem combinatorially. This is where the project reconnects to its parallel question:</p>
+<blockquote>
+<p>How complex is the problem of RCS-optimized aircraft design, really?</p>
+</blockquote>
+<p>Even this constrained exploration reveals that the design space is deep. The next section maps that depth explicitly.</p>
+<hr />
+<h2 id="section-9-radar-observability-design-maturity-a-tech-tree">Section 9 — Radar Observability Design Maturity: A Tech Tree</h2>
+<p>The limitations described in the previous section are not random gaps. They form a structured progression. Each one represents a real capability threshold — a place where additional tooling, validation, or organizational depth is required before the next level of insight becomes achievable.</p>
+<p>To make this structure explicit, the diagram below maps the capability space as a <strong>maturity tech tree</strong>: a representation borrowed from game design, where nodes represent unlockable capabilities and edges represent the dependencies between them.</p>
+<div class="figure-scroll">
+<figure><img alt="Radar Observability Design Maturity Tech Tree" src="rcs_tech_tree.svg" /><figcaption><a href="rcs_tech_tree.svg" target="_blank">View full size ↗</a></figcaption></figure>
+</div>
+<p>The tree has four parallel axes, each tracking a distinct dimension of capability growth.</p>
+<hr />
+<h3 id="the-maturity-spine-what-you-can-actually-answer">The maturity spine — what you can actually answer</h3>
+<p>The central column (L0–L5) represents the core question that the workflow can address at each stage.</p>
+<p><strong>L0 — Intuition and Unvalidated Simulation</strong> is the starting point. You can illuminate a geometry with a plane wave, visualize near-field behavior, and form qualitative impressions about which features dominate return. There is no calibrated measurement, no benchmark comparison, and no systematic coverage of angle or frequency. This is the level of a single engineer running openEMS on a workstation for the first time. It is genuinely useful for building intuition and catching gross errors. It is not yet useful for making engineering claims.</p>
+<p><strong>L1 — Spatial Attribution of Scattering</strong> is where the directional Poynting accumulation method places this project. The question has shifted from <em>what does the field look like?</em> to <em>where is the return coming from?</em> Hot-spot mapping, feature attribution, and repeatable post-processing are now possible. Canonical geometry benchmarking (the sphere case) gives a reference point. A small team with a structured workflow can produce spatially resolved diagnostics and begin drawing geometric conclusions.</p>
+<p>This is where the current work ends. Everything above L1 is within reach, but requires deliberate investment.</p>
+<p><strong>L2 — Parametric Observability Exploration</strong> is the first major expansion. Rather than studying a single incidence condition, you begin sweeping: azimuth angle, elevation angle, frequency band, polarization. Each sweep is a batch of solver runs. The question becomes <em>how does observability change?</em> rather than <em>what is it now?</em> This requires scripted pipelines, structured data management, and a shared compute cluster. It is the point at which individual experimentation becomes team infrastructure.</p>
+<p><strong>L3 — Calibrated RCS Engineering</strong> introduces formal far-field extraction and cross-solver verification. This is where simulation results can be compared to physical measurements or certified against published data. The workflow now produces numbers you can defend. Bistatic patterns, polarimetric characterizations, and geometry sensitivity studies become possible. Cross-disciplinary team involvement is expected.</p>
+<p><strong>L4 — Integrated Observability Design</strong> is the level at which observability becomes a first-class design variable rather than an analysis output. Trade studies between aerodynamic performance and radar signature are performed systematically. Surrogate models accelerate the inner optimization loop. Monte Carlo methods quantify sensitivity. At this level, a UAV airframe is not just analyzed — it is <em>shaped</em> by observability constraints.</p>
+<p><strong>L5 — Closed-Loop Observability Optimization</strong> represents the frontier of the field: adjoint sensitivity methods, AI-driven geometry exploration, and fully automated multi-objective design loops. Observability is no longer evaluated after the fact. It drives the geometry generation process itself. This is the capability level implied by programs like the F-35 or B-21.</p>
+<hr />
+<h3 id="the-validation-axis-how-much-you-can-trust-the-answer">The validation axis — how much you can trust the answer</h3>
+<p>Maturity alone is not sufficient. Computation without calibration produces confident-sounding numbers that may have no relationship to reality.</p>
+<p>The validation axis (V0–V4) tracks the level of physical grounding available at each stage.</p>
+<p><strong>V0</strong> is no validation at all — pure correlation against informal expectations or prior experience.</p>
+<p><strong>V1 — Canonical Validation</strong> is where this project sits. Sphere comparison against the Mie series analytical solution confirms that the solver reproduces known scattering behavior within acceptable agreement. This is a necessary but not sufficient condition for trust. It says the solver is working correctly in a symmetric, well-characterized case. It says relatively little about complex asymmetric geometries under operational illumination conditions.</p>
+<p>V2 through V4 represent progressively richer grounding: material coupon measurements, scaled model testing in an anechoic chamber, and finally full aircraft range measurements. Each level requires physical test hardware, which introduces cost, access, and program infrastructure that places it well beyond individual experimentation.</p>
+<p>The key observation is that V1 enables L1, but higher maturity levels require corresponding validation depth. You cannot credibly claim L3 capability without V3-level grounding.</p>
+<hr />
+<h3 id="solver-enablement-the-computational-substrate">Solver enablement — the computational substrate</h3>
+<p>The right column of the tree maps which EM solver types support which maturity levels.</p>
+<p><strong>FDTD</strong> (Finite-Difference Time-Domain) — the approach used in this project via openEMS — unlocks L0 through L2. Its key advantages are field-level physical transparency, broadband single-run capability, and natural support for cavity and transient physics. Its limitation is grid scaling: memory and compute grow as O(N³) with problem size, which eventually restricts the maximum achievable airframe dimensions at useful frequencies.</p>
+<p><strong>FEM</strong> (Finite Element Method) extends into L2–L4 territory through adaptive meshing and more efficient handling of complex boundary conditions and material detail.</p>
+<p><strong>MoM</strong> (Method of Moments) becomes increasingly important at L3–L5 for large metallic geometries, where surface discretization is far more efficient than volumetric gridding. Design-space sweeps that would be prohibitively expensive in FDTD become tractable in MoM.</p>
+<p>Realistic programs at L3 and above use multiple solvers in complementary roles — FDTD for cavity detail, MoM for large surface sweeps, FEM for material-sensitive substructures — cross-verifying results to manage solver-specific error sources.</p>
+<hr />
+<h3 id="automation-depth-the-difference-between-experiments-and-engineering">Automation depth — the difference between experiments and engineering</h3>
+<p>The automation progression (A1–A4) is perhaps the least glamorous but most practically limiting axis.</p>
+<p><strong>A1 — Scripted Batch Runs</strong> is the entry point. Repeatable pipelines, parameter loops, consistent naming conventions. This is the difference between an experiment that worked once and a workflow that can be relied upon.</p>
+<p><strong>A2 — Parametric Sweeps</strong> structures the parameter space. It enables the kind of angular and frequency surveys described as L2 capability.</p>
+<p><strong>A3 — Monte Carlo Exploration</strong> introduces statistical thinking. Instead of asking what happens at one set of parameters, you ask how sensitive the result is across a distribution. This is where observability engineering starts to look like proper uncertainty quantification.</p>
+<p><strong>A4 — Surrogate and Optimization</strong> closes the loop. Machine learning models stand in for expensive solver calls. Multi-objective optimizers explore the design space. Adjoint methods provide gradient information that would otherwise require hundreds of finite-difference perturbations. This is the computational infrastructure behind modern low-observable design programs.</p>
+<hr />
+<h3 id="where-this-project-sits">Where this project sits</h3>
+<p>The work described in this article occupies <strong>L0/L1 on the maturity spine, V1 on the validation axis, and FDTD on the solver axis, with A1-level automation at most.</strong> These are marked with gold borders in the diagram above.</p>
+<p>That is not a failure. L0 and L1 are precisely the right level to answer the questions this project set out to address:</p>
+<blockquote>
+<p>Can open-source tooling provide meaningful spatial insight into UAV radar observability? What parts of the geometry are responsible for dominant return?</p>
+</blockquote>
+<p>Those questions have been answered, at least for the specific conditions simulated. Spatial hot-spot attribution is achievable. Cavity dominance over edge scattering is demonstrable. Canonical validation is satisfied.</p>
+<p>What the tech tree makes clear is how much structure exists <em>above</em> that foundation, and how much deliberate investment — in tooling, validation, compute, and team capacity — is required to ascend it.</p>
+<p>The further question posed at the outset — <em>how complex is RCS-optimized aircraft design, really?</em> — now has a concrete answer. Achieving L3 or L4 capability, where observability genuinely becomes a design variable in a trusted workflow, requires a dedicated electromagnetic engineering team, access to physical test infrastructure, HPC compute, and multi-solver verification pipelines. It is a multi-year, multi-person effort in the context of a real program.</p>
+<p>What can be done with a single open-source solver, a workstation, and a few weeks of work is L1: field-level spatial attribution under controlled conditions. That is still more than nothing. And as the foundational rung of the tree, it is exactly the right starting point.</p>
+<hr />
+<h2 id="conclusion-what-was-demonstrated-and-what-it-tells-us">Conclusion — What Was Demonstrated, and What It Tells Us</h2>
+<p>This project began with three interlocking questions:</p>
+<blockquote>
+<p>What is the radar observability of various UAV morphologies? How difficult is it to evaluate without proprietary tools? And how complex is RCS-optimized design, really?</p>
+</blockquote>
+<p>Each question has now been partially answered, with honest accounting of what remains.</p>
+<p><strong>On observability and spatial attribution.</strong> Radar Cross Section is not a scalar and should not be treated as one. It is a distribution — over angle, frequency, polarization, and time — produced by spatially distributed scattering mechanisms that do not always map to visually obvious geometric features. In this project, engine cavities dominated backscatter return over leading edges and wing tips, consistent with electromagnetic behavior but contrary to geometric intuition. Without a spatial diagnostic, that finding would be invisible. A single RCS number would not tell you where to look.</p>
+<p><strong>On open-source feasibility.</strong> It is possible to extract meaningful spatial insight into radar observability using open-source tools. openEMS provides a capable FDTD solver that reproduces canonical scattering behavior and can be driven from standard scientific Python tooling. The directional Poynting vector accumulation method — computing, projecting, and temporally integrating energy flow back toward the illuminating source — produces a spatially resolved hot-spot map directly from field data, without reconstructing a full radar signal processing chain. The result is not a calibrated RCS measurement. It is a design-oriented diagnostic that reveals which geometric features persistently contribute to backscatter. For early-stage morphology exploration, that is more actionable than a single number.</p>
+<p><strong>On design complexity.</strong> The tech tree in Section 9 answers the complexity question concretely. The work here occupies L1 on the maturity spine: single-aspect, single-frequency, field-level spatial attribution with canonical validation. That is a real and useful result. It is also the first rung of a much deeper structure. Reaching L3 — where observability becomes a credibly quantified design variable — requires formal far-field integration, cross-solver verification, and physical measurement infrastructure. Reaching L4 and L5, where observability drives the geometry generation process, requires a dedicated electromagnetic team, HPC compute, and surrogate-model-accelerated optimization loops. These are multi-year, multi-person efforts. That is not a discouraging conclusion; it is an accurate one. Understanding where the ladder starts, and how tall it is, is itself a useful outcome.</p>
+<p><strong>What this opens.</strong> The infrastructure built here — a validated FDTD workflow, a spatial attribution post-processing pipeline, and a structured model of the capability space — provides a concrete foundation for several directions: angular and frequency sweeps to build observability distributions, material property studies to explore composites and absorbers, and eventually near-to-far field integration to produce calibrated RCS estimates. Each step is technically reachable from this starting point.</p>
+<p>The central claim of this project is modest and, I believe, defensible: <strong>open-source full-wave simulation, paired with physically grounded post-processing, can provide genuine spatial insight into UAV radar observability without proprietary tools.</strong> It cannot replace a commercial RCS engineering workflow. But it can answer questions that a commercial tool's abstraction layer obscures — questions about <em>why</em> a geometry scatters the way it does, and <em>where</em> to look when you want to change it.</p>
+<p>That is a reasonable foundation to build from.</p>
+      <!-- REPORT_CONTENT_END -->
       </div>
 
     </article>
@@ -133,25 +518,6 @@ pathlib.Path('docs/report-content.html').write_text(html)
       Licensed under <a href="https://github.com/lpurdy01/rcs/blob/main/LICENSE">MIT / GPL v3</a>.
     </p>
   </footer>
-
-  <!--
-    Automatically loads report-content.html into #report-content if it exists.
-    No build step required — just generate the file and commit it.
-  -->
-  <script>
-    fetch('report-content.html')
-      .then(function(res) {
-        if (!res.ok) return;
-        return res.text();
-      })
-      .then(function(html) {
-        if (html) {
-          document.getElementById('report-content').innerHTML = html;
-          if (window.MathJax) MathJax.typesetPromise();
-        }
-      })
-      .catch(function() {});
-  </script>
 
 </body>
 </html>

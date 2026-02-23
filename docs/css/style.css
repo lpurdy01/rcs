@@ -2,16 +2,16 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --text:        #1a1a2e;
-  --text-muted:  #555;
-  --bg:          #fafaf8;
-  --bg-code:     #f0f0ec;
-  --accent:      #1a6496;
-  --accent-light:#e8f4f8;
-  --border:      #ddd;
-  --tag-bg:      #e8f4f8;
-  --tag-text:    #1a6496;
-  --max-width:   720px;
+  --text:        #d0e4f8;
+  --text-muted:  #7a9ab8;
+  --bg:          #0d1117;
+  --bg-code:     #121a24;
+  --accent:      #4a90d8;
+  --accent-light:#12202e;
+  --border:      #2a3a4a;
+  --tag-bg:      #162435;
+  --tag-text:    #9ab8d8;
+  --max-width:   1100px;
   --font-body:   Georgia, 'Times New Roman', serif;
   --font-mono:   'Fira Code', 'Cascadia Code', Consolas, monospace;
   --font-ui:     -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -388,6 +388,58 @@ blockquote {
 .report-placeholder ul {
   margin: 0.5rem 0 0 1.25rem;
   line-height: 1.8;
+}
+
+/* ─── Wide figure scroll container (tech tree, large diagrams) ─────────── */
+.figure-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 1.5rem 0;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--accent-light);
+}
+
+.figure-scroll figure {
+  margin: 0;
+  min-width: 900px;
+}
+
+.figure-scroll figure img {
+  max-width: none;
+  width: 1800px;
+  border: none;
+  border-radius: 0;
+  display: block;
+}
+
+.figure-scroll figcaption {
+  padding: 0.5rem 1rem;
+  min-width: 1800px;
+}
+
+/* ─── Mermaid diagrams ─────────────────────────────────────────────────── */
+pre.mermaid {
+  background: transparent;
+  border: none;
+  border-left: none;
+  padding: 0.5rem 0;
+  margin: 1.5rem 0;
+  overflow-x: auto;
+  text-align: center;
+}
+
+/* ─── Editorial / SUG annotation notes ─────────────────────────────────── */
+.editorial-note {
+  background: #1a1200;
+  border-left: 3px solid #ca8a04;
+  border-radius: 0 4px 4px 0;
+  padding: 0.65rem 1rem;
+  margin: 1rem 0;
+  font-family: var(--font-ui);
+  font-size: 0.82rem;
+  color: #d4a800;
+  font-style: italic;
 }
 
 /* ─── Responsive ───────────────────────────────────────────────────────── */
