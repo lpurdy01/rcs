@@ -236,8 +236,8 @@ Interpretation was.</p>
 <li>If I modify a feature, how will the return shift spatially?</li>
 </ul>
 <p>The raw E-field slice is too low-level. It shows the electromagnetic solution but not its meaning in the context of radar observability.</p>
-<p>This problem becomes even clearer when examining canonical geometries. Consider the hollow conducting sphere case used as a validation example:</p>
-<figure><img alt="Hollow aluminum reference sphere with annotated backscatter accumulation result" src="report_images/hollow_refrence_AL_shpere_annotated.png" /><figcaption><em>The hollow metallic sphere under plane wave illumination. The symmetric scattering pattern is analytically well-characterized — making it a useful sanity check for the simulation before applying the same approach to more complex geometries.</em></figcaption></figure>
+<p>This problem becomes even clearer when examining canonical geometries. Consider the hollow conducting sphere case used as a validation example.</p>
+
 <p>The symmetry is beautiful. The scattering behavior is consistent with expectation. But again, while the fields demonstrate correct physics, they do not immediately reveal a spatial “map” of backscatter contribution.</p>
 <p>At this point, a realization emerged:</p>
 <blockquote>
@@ -330,6 +330,11 @@ $$</p>
 <figure><img alt="Hollow aluminum sphere with annotated backscatter accumulation result" src="report_images/hollow_refrence_AL_shpere_annotated.png" /><figcaption><em>Directional Poynting accumulation applied to the hollow metallic sphere. The symmetric hot-spot pattern confirms that the method is not introducing directional artifacts — the return concentrates where physics dictates.</em></figcaption></figure>
 <p>Validation was also extended by placing patterns of multiple spheres into the simulation domain and confirming that the resulting backscatter maps reproduced the spatial arrangement of spheres—not some artifact of the grid.</p>
 <p>It builds confidence that when asymmetry appears in more complex geometries, it is coming from the geometry — not the math.</p>
+<h3 id="quantitative-validation-normalised-rcs-vs-mie-series">Quantitative validation: normalised RCS vs Mie series</h3>
+<p>Spatial symmetry confirms that the Poynting accumulation method introduces no directional artefacts, but it does not by itself verify the underlying FDTD solver's quantitative accuracy. A complementary check compares the FDTD-computed backscattering cross section over frequency against the exact analytical solution given by Mie theory.</p>
+<p>For a perfectly-conducting sphere, the Mie series provides a closed-form expression for the normalised backscattering efficiency Q_back = σ/(πa²) as a function of ka = 2πa/λ. This quantity passes through a recognisable sequence of regimes — Rayleigh (small ka), resonance (ka ≈ 1–5), and the geometric-optics limit (σ → πa²) — in a pattern that any correct full-wave solver must reproduce.</p>
+<figure><img alt="Mie series vs FDTD normalised RCS comparison" src="report_images/sphere_mie_vs_fdtd_comparison.png" /><figcaption><em>Normalised backscattering RCS σ/(πa²) vs sphere radius / wavelength for a PEC sphere (a = 200 mm, 50–1000 MHz). The analytical Mie series (solid blue) shows the first resonance peak near a/λ ≈ 0.14 and oscillations converging toward the geometric-optics limit (dashed line, σ = πa²). The FDTD result (dashed red) is overlaid once the simulation has been run with openEMS. Acceptable agreement — typically within a few percent across this range — is the V1 validation gate described in Section 9.</em></figcaption></figure>
+<p>The openEMS sphere example was specifically chosen because this comparison is well-established in the literature. Agreement between the two curves validates that the solver is behaving correctly in the canonical symmetric case and provides a concrete trust baseline before extending the same workflow to less well-characterised geometries.</p>
 <hr />
 <h3 id="aircraft-like-geometry-intuition-versus-reality">Aircraft-like geometry — intuition versus reality</h3>
 <p>The more interesting results came from the aluminum model aircraft geometry.</p>

@@ -228,10 +228,9 @@ Near-field visualizations are valuable for debugging and qualitative intuition, 
 
 The raw E-field slice is too low-level. It shows the electromagnetic solution but not its meaning in the context of radar observability.
 
-This problem becomes even clearer when examining canonical geometries. Consider the hollow conducting sphere case used as a validation example:
+This problem becomes even clearer when examining canonical geometries. Consider the hollow conducting sphere case used as a validation example.
 
-![Hollow aluminum reference sphere with annotated backscatter accumulation result](report_images/hollow_refrence_AL_shpere_annotated.png)
-*The hollow metallic sphere under plane wave illumination. The symmetric scattering pattern is analytically well-characterized — making it a useful sanity check for the simulation before applying the same approach to more complex geometries.*
+*SUG: Insert a raw E-field slice visualization of the sphere simulation here (a mid-plane cut showing the incident wave, shadow region, and near-field interference pattern). This image should be generated from the openEMS field dump — it illustrates the 'too much data' problem before any directional processing is applied. Run `test_simulations/RCS_Sphere/rcs_sphere_full_sim.py` with field dump enabled, then visualize the E-field dump in ParaView.*
 
 The symmetry is beautiful. The scattering behavior is consistent with expectation. But again, while the fields demonstrate correct physics, they do not immediately reveal a spatial “map” of backscatter contribution.
 
@@ -332,6 +331,17 @@ This validation matters. Any post-processing pipeline that artificially emphasiz
 Validation was also extended by placing patterns of multiple spheres into the simulation domain and confirming that the resulting backscatter maps reproduced the spatial arrangement of spheres—not some artifact of the grid.
 
 It builds confidence that when asymmetry appears in more complex geometries, it is coming from the geometry — not the math.
+
+### Quantitative validation: normalised RCS vs Mie series
+
+Spatial symmetry confirms that the Poynting accumulation method introduces no directional artefacts, but it does not by itself verify the underlying FDTD solver's quantitative accuracy. A complementary check compares the FDTD-computed backscattering cross section over frequency against the exact analytical solution given by Mie theory.
+
+For a perfectly-conducting sphere, the Mie series provides a closed-form expression for the normalised backscattering efficiency Q_back = σ/(πa²) as a function of ka = 2πa/λ. This quantity passes through a recognisable sequence of regimes — Rayleigh (small ka), resonance (ka ≈ 1–5), and the geometric-optics limit (σ → πa²) — in a pattern that any correct full-wave solver must reproduce.
+
+![Mie series vs FDTD normalised RCS comparison](report_images/sphere_mie_vs_fdtd_comparison.png)
+*Normalised backscattering RCS σ/(πa²) vs sphere radius / wavelength for a PEC sphere (a = 200 mm, 50–1000 MHz). The analytical Mie series (solid blue) shows the first resonance peak near a/λ ≈ 0.14 and oscillations converging toward the geometric-optics limit (dashed line, σ = πa²). The FDTD result (dashed red) is overlaid once the simulation has been run with openEMS. Acceptable agreement — typically within a few percent across this range — is the V1 validation gate described in Section 9.*
+
+The openEMS sphere example was specifically chosen because this comparison is well-established in the literature. Agreement between the two curves validates that the solver is behaving correctly in the canonical symmetric case and provides a concrete trust baseline before extending the same workflow to less well-characterised geometries.
 
 ---
 

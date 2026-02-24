@@ -1,0 +1,68 @@
+{
+    "name": "RCS Simulation Environment",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "args": {
+            "USERNAME": "vscode",
+            "USER_UID": "1000",
+            "USER_GID": "1000"
+        }
+    },
+
+    // ── SSH key forwarding ──────────────────────────────────────────────────
+    // Mounts the host SSH agent socket so git over SSH works inside the container.
+    // On Linux/WSL2: SSH_AUTH_SOCK must be set in the host shell.
+    //   Check with: echo $SSH_AUTH_SOCK
+    //   If empty: run `eval $(ssh-agent) && ssh-add ~/.ssh/id_ed25519`
+    // VS Code also auto-forwards SSH agent when using Remote-SSH extension.
+    "mounts": [
+        // SSH agent socket passthrough
+        "source=${localEnv:SSH_AUTH_SOCK},target=/run/host-services/ssh-auth.sock,type=bind,consistency=consistent",
+
+        // X11 Unix socket for GUI app passthrough (CSX CAD, ParaView)
+        // Requires: xhost +local:docker  (run once on host before opening container)
+        "source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind,consistency=cached"
+    ],
+
+    "remoteEnv": {
+        // SSH agent
+        "SSH_AUTH_SOCK": "/run/host-services/ssh-auth.sock",
+
+        // Display passthrough — picks up DISPLAY from the host environment.
+        // On WSL2 with WSLg this is typically ":0".
+        // On a standard Linux desktop it may be ":0" or ":1".
+        "DISPLAY": "${localEnv:DISPLAY}",
+
+        // Ensure openEMS binaries and libs are on PATH after post-create install
+        "PATH": "/home/vscode/opt/openEMS/bin:${containerEnv:PATH}",
+        "LD_LIBRARY_PATH": "/home/vscode/opt/openEMS/lib:${containerEnv:LD_LIBRARY_PATH}"
+    },
+
+    // runArgs: GPU device access for hardware OpenGL rendering.
+    // Remove --device=/dev/dri if the host has no GPU / headless CI.
+    "runArgs": [
+        "--device=/dev/dri"
+    ],
+
+    // Run after the container is created (builds openEMS from source)
+    "postCreateCommand": "bash .devcontainer/post-create.sh",
+
+    // VS Code extensions pre-installed inside the container
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "ms-python.debugpy",
+                "njpwerner.autodocstring"
+            ],
+            "settings": {
+                "python.defaultInterpreterPath": "/usr/bin/python3",
+                "terminal.integrated.defaultProfile.linux": "bash"
+            }
+        }
+    },
+
+    // Run as the non-root vscode user
+    "remoteUser": "vscode"
+}
