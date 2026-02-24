@@ -46,23 +46,13 @@ echo "[2/5] Building openEMS (this takes 10–30 minutes)..."
 cd "$PROJECT_DIR"
 ./update_openEMS.sh "$OPENEMS_INSTALL_DIR" --python
 
-# ── 3. Install Python bindings ────────────────────────────────────────────
+# ── 3. Activate the openEMS venv in shell profile ─────────────────────────
+# update_openEMS.sh --python installs CSXCAD + openEMS Python bindings into
+# an isolated venv at $OPENEMS_INSTALL_DIR/venv — no separate setup.py needed.
 echo ""
-echo "[3/5] Installing openEMS Python bindings..."
+echo "[3/5] Wiring openEMS venv into ~/.bashrc..."
 
-# setup.py requires OPENEMS_INSTALL_PATH to locate headers and libraries
-export OPENEMS_INSTALL_PATH="$OPENEMS_INSTALL_DIR"
-
-cd "$PROJECT_DIR/CSXCAD/python"
-python setup.py install --user
-
-cd "$PROJECT_DIR/openEMS/python"
-python setup.py install --user
-
-# ── 4. Persist environment variables in shell profile ─────────────────────
-echo ""
-echo "[4/5] Updating ~/.bashrc with openEMS paths..."
-
+VENV="$OPENEMS_INSTALL_DIR/venv"
 BASHRC="$HOME/.bashrc"
 
 add_if_missing() {
@@ -71,22 +61,30 @@ add_if_missing() {
 }
 
 add_if_missing "# openEMS"
+add_if_missing "source \"$VENV/bin/activate\""
 add_if_missing "export PATH=\"$OPENEMS_INSTALL_DIR/bin:\$PATH\""
 add_if_missing "export LD_LIBRARY_PATH=\"$OPENEMS_INSTALL_DIR/lib:\$LD_LIBRARY_PATH\""
 
-# Make the paths available immediately in the current session
+# Activate immediately for the rest of this script
+# shellcheck source=/dev/null
+source "$VENV/bin/activate"
 export PATH="$OPENEMS_INSTALL_DIR/bin:$PATH"
 export LD_LIBRARY_PATH="$OPENEMS_INSTALL_DIR/lib:${LD_LIBRARY_PATH:-}"
 
-# ── Quick smoke test ────────────────────────────────────────────────────────
+# ── 4. (reserved) ─────────────────────────────────────────────────────────
+echo "[4/5] Paths wired."
+
+# ── Smoke test ─────────────────────────────────────────────────────────────
 echo ""
 echo "[5/5] Smoke test"
 echo "================================================================"
-if python3 -c "import openEMS; import CSXCAD; print('openEMS import OK')" 2>&1; then
+if python -c "import openEMS; import CSXCAD; print('openEMS + CSXCAD import OK')" 2>&1; then
     echo " openEMS Python bindings: OK"
+    python -c "from openEMS.physical_constants import C0; print(f' C0 = {C0:.6e} m/s  (sanity check)')"
 else
-    echo " WARNING: openEMS Python bindings not found on PYTHONPATH."
-    echo " You may need to open a new terminal or run: source ~/.bashrc"
+    echo " ERROR: openEMS Python bindings not importable from venv."
+    echo "        Venv path: $VENV"
+    ls "$VENV/lib/" 2>/dev/null || echo "        (venv/lib not found)"
 fi
 
 echo ""
