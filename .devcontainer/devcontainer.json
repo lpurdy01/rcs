@@ -1,5 +1,5 @@
 {
-    "name": "RCS Simulation Environment",
+    "name": "RCS Simulation Environment (WSL GUI)",
     "build": {
         "dockerfile": "Dockerfile",
         "args": {
@@ -9,45 +9,41 @@
         }
     },
 
-    // ── SSH key forwarding ──────────────────────────────────────────────────
-    // Mounts the host SSH agent socket so git over SSH works inside the container.
-    // On Linux/WSL2: SSH_AUTH_SOCK must be set in the host shell.
-    //   Check with: echo $SSH_AUTH_SOCK
-    //   If empty: run `eval $(ssh-agent) && ssh-add ~/.ssh/id_ed25519`
-    // VS Code also auto-forwards SSH agent when using Remote-SSH extension.
-    "mounts": [
-        // SSH agent socket passthrough
-        "source=${localEnv:SSH_AUTH_SOCK},target=/run/host-services/ssh-auth.sock,type=bind,consistency=consistent",
-
-        // X11 Unix socket for GUI app passthrough (CSX CAD, ParaView)
-        // Requires: xhost +local:docker  (run once on host before opening container)
-        "source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind,consistency=cached"
+    "runArgs": [
+        "--net=host"
     ],
 
+    "mounts": [
+        // X11 socket for legacy X11 apps
+        "source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind",
+        // WSLg runtime dir — provides Wayland, PulseAudio, and the X11 socket on WSL2
+        "source=/mnt/wslg,target=/mnt/wslg,type=bind",
+        // SSH keys — mounts the host .ssh directory read-only so git over SSH works.
+        // ${localEnv:HOME} resolves on Linux/WSL; ${localEnv:USERPROFILE} on Windows;
+        // one will be empty so the concatenation always gives the right path.
+        "source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/vscode/.ssh,readonly,type=bind,consistency=cached"
+    ],
+
+    // Display / audio env vars — hardcoded to WSLg defaults (works out of the box on WSL2)
+    "containerEnv": {
+        "DISPLAY": ":0",
+        "WAYLAND_DISPLAY": "wayland-0",
+        "XDG_RUNTIME_DIR": "/mnt/wslg/runtime-dir",
+        "PULSE_SERVER": "/mnt/wslg/PulseServer"
+    },
+
+    // SSH agent socket passed through from host shell
     "remoteEnv": {
-        // SSH agent
-        "SSH_AUTH_SOCK": "/run/host-services/ssh-auth.sock",
-
-        // Display passthrough — picks up DISPLAY from the host environment.
-        // On WSL2 with WSLg this is typically ":0".
-        // On a standard Linux desktop it may be ":0" or ":1".
-        "DISPLAY": "${localEnv:DISPLAY}",
-
-        // Ensure openEMS binaries and libs are on PATH after post-create install
+        "SSH_AUTH_SOCK": "${localEnv:SSH_AUTH_SOCK}",
+        // openEMS paths (set permanently in ~/.bashrc by post-create, but also
+        // needed here for non-interactive VS Code terminal sessions)
         "PATH": "/home/vscode/opt/openEMS/bin:${containerEnv:PATH}",
         "LD_LIBRARY_PATH": "/home/vscode/opt/openEMS/lib:${containerEnv:LD_LIBRARY_PATH}"
     },
 
-    // runArgs: GPU device access for hardware OpenGL rendering.
-    // Remove --device=/dev/dri if the host has no GPU / headless CI.
-    "runArgs": [
-        "--device=/dev/dri"
-    ],
-
-    // Run after the container is created (builds openEMS from source)
+    // Builds openEMS from source and writes the bypassPermissions Claude config
     "postCreateCommand": "bash .devcontainer/post-create.sh",
 
-    // VS Code extensions pre-installed inside the container
     "customizations": {
         "vscode": {
             "extensions": [
@@ -63,6 +59,5 @@
         }
     },
 
-    // Run as the non-root vscode user
     "remoteUser": "vscode"
 }
