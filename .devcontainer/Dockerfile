@@ -43,11 +43,11 @@ RUN apt-get update \
         libxi-dev \
         x11-utils \
         # OpenGL for CSX CAD (Qt5 OpenGL application)
-        libgl1-mesa-glx \
         libgl1-mesa-dri \
         libglu1-mesa \
-        # Qt5 XCB platform plugin (required for display on X11)
-        libqt5xcbqpa5 \
+        # Qt5 GUI + XCB platform support
+        # Note: libqt5xcbqpa5 was merged into libqt5gui5 in Ubuntu 22.04
+        libqt5gui5 \
         libqt5x11extras5 \
         libxcb-icccm4 \
         libxcb-image0 \
