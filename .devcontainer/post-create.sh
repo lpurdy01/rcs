@@ -50,11 +50,14 @@ cd "$PROJECT_DIR"
 echo ""
 echo "[3/5] Installing openEMS Python bindings..."
 
-cd "$PROJECT_DIR/openEMS/python"
-pip install --user -e . 2>/dev/null || python setup.py install --user
+# setup.py requires OPENEMS_INSTALL_PATH to locate headers and libraries
+export OPENEMS_INSTALL_PATH="$OPENEMS_INSTALL_DIR"
 
 cd "$PROJECT_DIR/CSXCAD/python"
-pip install --user -e . 2>/dev/null || python setup.py install --user
+python setup.py install --user
+
+cd "$PROJECT_DIR/openEMS/python"
+python setup.py install --user
 
 # ── 4. Persist environment variables in shell profile ─────────────────────
 echo ""
