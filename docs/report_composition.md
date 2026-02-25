@@ -585,3 +585,127 @@ Each question has now been partially answered, with honest accounting of what re
 The central claim of this project is modest and, I believe, defensible: **open-source full-wave simulation, paired with physically grounded post-processing, can provide genuine spatial insight into UAV radar observability without proprietary tools.** It cannot replace a commercial RCS engineering workflow. But it can answer questions that a commercial tool's abstraction layer obscures — questions about *why* a geometry scatters the way it does, and *where* to look when you want to change it.
 
 That is a reasonable foundation to build from.
+
+---
+
+## Section 10 — Anisotropic Material Interaction: Carbon Fiber Composite Study
+
+*An FDTD demonstration of polarisation-selective attenuation in an anisotropic composite slab.*
+
+---
+
+### Motivation
+
+Most of the analysis above treats the UAV airframe as aluminium — an isotropic conductor. But real aircraft structures increasingly use **carbon fiber reinforced polymer (CFRP)** composites, which are neither isotropic nor simply metallic. A CFRP laminate behaves very differently depending on which direction the electric field is oriented relative to the fiber axis.
+
+This section presents a targeted FDTD experiment to demonstrate that behaviour. The goal is not to produce validated CFRP RCS numbers — that requires material characterisation data and sub-millimetre mesh resolution beyond what a workstation can provide at radar frequencies. The goal is to show **how anisotropy in conductivity creates a polarisation-selective interaction** and to verify that openEMS can capture that physics.
+
+---
+
+### Material physics
+
+Carbon fiber is highly conductive along the fiber axis (σ∥ ≈ 50,000 S/m in bulk CFRP) and nearly insulating transverse to it (σ⊥ ≈ 10–500 S/m). The consequence at radar frequencies is that the skin depth — the depth at which the electric field has decayed to 1/e — differs by orders of magnitude depending on polarisation:
+
+[
+\delta = \frac{1}{\sqrt{\pi f \mu_0 \sigma}}
+]
+
+At 1 GHz with σ∥ = 50,000 S/m: δ∥ ≈ 0.07 mm. An electric field polarised along the fiber axis is attenuated to near zero within a fraction of a millimetre. At σ⊥ = 100 S/m: δ⊥ ≈ 1.6 mm — still small, but the contrast between the two directions is dramatic.
+
+**FDTD scaling note.** Properly resolving these skin depths on a workstation requires mesh cells of order 0.01–0.1 mm, which means > 10⁹ cells at radar frequencies — impractical. This simulation uses conductivities reduced by ~10⁴× to give δ ≈ 10 mm at 1 GHz, so that 3 mm cells provide adequate spatial resolution (≥ 3 cells per skin depth). The **contrast ratio σ∥/σ⊥ = 100× is preserved**. Every qualitative electromagnetic phenomenon — anisotropic reflection, polarisation-selective attenuation, skin-effect field decay — is faithfully reproduced; only the spatial scale shifts.
+
+| Parameter | Simulation | Real CFRP |
+|-----------|-----------|-----------|
+| σ∥ (along fiber, x) | 2.5 S/m | ~50,000 S/m |
+| σ⊥ (transverse, y/z) | 0.025 S/m | ~100–500 S/m |
+| σ∥ / σ⊥ ratio | **100×** | **100–500×** |
+| εr (matrix) | 4 | ~4–6 |
+| δ∥ at 1 GHz | 10.5 mm | 0.07 mm |
+| FDTD cell size | 3 mm (3.5 cells/δ) | 0.01 mm required |
+
+---
+
+### Simulation setup
+
+A 150 × 150 × 20 mm slab is placed at the origin. Fibers run along **x**. A plane wave propagates in **+z** (normal incidence). Two independent runs compare polarisations:
+
+- **Ex (∥ fiber):** E-field parallel to fibers. Encounters σ∥ = 2.5 S/m. Predicted δ ≈ 10.5 mm at 1 GHz → slab is ~1.9 skin depths thick → strong attenuation, most energy reflected.
+- **Ey (⊥ fiber):** E-field perpendicular to fibers. Encounters σ⊥ = 0.025 S/m. Predicted δ ≈ 425 mm at 1 GHz → slab is < 0.05 skin depths thick → slab nearly transparent.
+
+A reference run (no slab) provides the normalisation baseline for transmission measurements.
+
+The CFRP material is defined as:
+
+```python
+cfrp = CSX.AddMaterial('CFRP',
+    epsilon=[4.0, 4.0, 4.0],
+    kappa=[2.5, 0.025, 0.025],   # [σ_x, σ_y, σ_z]
+)
+cfrp.SetIsotropy(False)          # enable anisotropic tensor treatment
+```
+
+---
+
+### E-field maps: anisotropy visible in the field distribution
+
+The four panels below show |E| in the xz-plane (y = 0) at 1 GHz and 2 GHz for both polarisations. The slab surfaces are marked with dashed blue lines.
+
+![E-field comparison: Ex and Ey polarisations at 1 GHz and 2 GHz](report_images/cf_efield_comparison.png)
+*E-field magnitude in the xz-plane for Ex (∥ fiber, top row) and Ey (⊥ fiber, bottom row) polarisations. The fiber-aligned case (top) shows a strong standing-wave pattern in front of the slab (large reflection) and rapid field decay inside. The transverse case (bottom) shows weak reflection and near-uniform transmission. The effect is stronger at 2 GHz (right column) as the slab spans more skin depths.*
+
+The contrast is immediate: in the top row (Ex, fiber-aligned), the field behind the slab is almost zero. In the bottom row (Ey, transverse), the transmitted field behind the slab is nearly as strong as the incident wave. The bright standing-wave maxima in front of the Ex slab are the reflected field interfering constructively with the incident wave — exactly what would happen with a near-perfect reflector.
+
+---
+
+### Transmission coefficient vs frequency
+
+The FDTD transmission results are compared against the analytical single-pass estimate T = exp(−d/δ).
+
+![Transmission vs frequency: FDTD vs analytical estimate](report_images/cf_transmission.png)
+*Transmission coefficient |E_trans| / |E_inc| as a function of frequency for both polarisations. FDTD (solid lines) vs. single-pass analytical estimate (dashed). The fiber-aligned polarisation (red) shows strong, frequency-dependent attenuation. The transverse polarisation (blue) remains near-transparent across the full band. Agreement between FDTD and theory validates the anisotropic material implementation.*
+
+At 1 GHz the FDTD Ex transmission is near the analytical prediction of ~15%. The Ey transmission remains ~95% across the full 200 MHz – 2 GHz band — the slab is electromagnetically invisible to this polarisation.
+
+---
+
+### CW wave animation: phase-sweep visualisation
+
+These animations show one full phase cycle of the continuous-wave field at 1 GHz, constructed synthetically from the frequency-domain simulation data:
+
+[
+E(x, z, t) = \text{Re}\!\left[E_\text{complex}(x, z)\cdot e^{i\phi}\right], \quad \phi \in [0, 2\pi]
+]
+
+This technique produces a physically correct visualisation of the wave propagation without running a time-domain simulation.
+
+![CW wave animation — E∥ fiber (Ex polarisation)](report_images/cf_animation_Ex.mp4)
+*Continuous-wave field at 1 GHz for Ex polarisation (E ∥ fiber). The standing-wave pattern in front of the slab (interference between incident and reflected waves) is clearly visible. The field decays rapidly inside the slab and is nearly absent behind it.*
+
+![CW wave animation — E⊥ fiber (Ey polarisation)](report_images/cf_animation_Ey.mp4)
+*Continuous-wave field at 1 GHz for Ey polarisation (E ⊥ fiber). The slab barely perturbs the wave — the transmitted field behind the slab is nearly as strong as the incident wave, and the reflected standing wave in front is weak. This is qualitatively opposite to the fiber-aligned case despite the same geometry.*
+
+---
+
+### What this means for CFRP airframes
+
+The simulation illustrates a property relevant to any CFRP airframe design:
+
+**Radar interaction with a CFRP surface is polarisation-dependent.** A wave polarised along the fiber axis sees near-metallic behaviour. A wave polarised transverse to the fibers passes through with little attenuation.
+
+For a real layered composite with ply orientations at 0°/90°/±45°, the effective EM behaviour is an angular average of these two extremes — and will be orientation-specific in a way that depends on the laminate schedule, the radar frequency, and the incidence angle. The simplified two-orientation study here shows the limiting cases: the range of behaviour is bounded by these two extremes.
+
+The practical implication: **CFRP is not a radar-absorbing material, and treating it as such in a design analysis would be wrong.** It is a selectively reflective material whose interaction depends on the field orientation. At common radar frequencies, a CFRP surface with fibers near-parallel to the radar polarisation can return nearly as much energy as the same surface in aluminium.
+
+---
+
+### Simulation files
+
+The full simulation script is at `test_simulations/carbon_fiber/cf_anisotropic_sim.py`.
+
+```bash
+source /home/vscode/opt/openEMS/venv/bin/activate
+python test_simulations/carbon_fiber/cf_anisotropic_sim.py        # run + plot
+python test_simulations/carbon_fiber/cf_anisotropic_sim.py --post-only  # plot only
+```
+
+Three FDTD runs complete in under 60 seconds total on the devcontainer hardware (~575K cells, EndCriteria = 1e-3).

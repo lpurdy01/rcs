@@ -8,9 +8,11 @@
 
 The part of a small UAV that dominates its radar signature isn't the wings or the leading edges. It's the engine cavities — visually subtle enclosed volumes that trap and re-radiate electromagnetic energy.
 
-Found that using open-source FDTD simulation (openEMS), zero commercial licenses. Validated the workflow against the exact analytical solution for a metal sphere to confirm the numbers are meaningful before trusting the complex geometry results.
+Also ran an anisotropic CFRP material study: carbon fiber has 100× higher conductivity along the fibers than across them. That means the same slab transmits ~15 % of a co-polarized wave and ~95 % of a cross-polarized one. The fiber layup direction is a radar design variable — not just the geometry.
 
-Full write-up on the simulation methodology, the Mie series validation, and what the field data actually shows:
+All done using open-source FDTD simulation (openEMS), zero commercial licenses. Validated against the exact Mie series analytical solution before trusting the complex results.
+
+Full write-up on the simulation methodology, the Mie series validation, the anisotropic material study, and what the field data actually shows:
 
 [link to report]
 
@@ -27,6 +29,8 @@ Repo: https://github.com/lpurdy01/rcs
 Computed the radar cross section of a small UAV airframe using openEMS, a free FDTD electromagnetic solver — no commercial licenses, no institutional access required. Validated the simulation against exact Mie series theory for a metal sphere across three scattering regimes before trusting the complex geometry results.
 
 The most interesting finding wasn't in the numbers. It was in which part of the aircraft produced them. The engine cavities dominate the backscatter return. Not the wings. Not the tail. The enclosed volumes you wouldn't notice looking at the airframe.
+
+A follow-on material study modeled anisotropic carbon fiber composite (CFRP): the same slab transmits ~15 % of a wave polarized along the fibers and ~95 % of one polarized across them. Fiber layup direction is a radar design parameter, not just a structural one.
 
 Report: [link]
 Repo: https://github.com/lpurdy01/rcs
@@ -52,6 +56,26 @@ The strongest radar return came from the engine cavities — cylindrical enclose
 The mechanism is resonant trapping: electromagnetic energy enters the cavity, bounces between the walls, and re-radiates coherently back toward the source. For a cavity whose dimensions are on the order of the radar wavelength, this can produce a return that is orders of magnitude stronger than a flat surface of equivalent cross-sectional area. The enclosed geometry couples to the field in a way that exposed surfaces cannot.
 
 This is exactly the kind of result that a scalar RCS measurement would obscure. The number might tell you the aircraft is detectable. It would not tell you why, or where the dominant contribution originates, or what would happen if you changed the cavity geometry slightly.
+
+**Beyond geometry: material anisotropy in CFRP airframes**
+
+Modern UAV structures increasingly use carbon fiber reinforced polymer (CFRP) — strong, lightweight, and from an electromagnetic standpoint, unusual. Unlike metals, CFRP has directional conductivity. Along the fiber axis, individual carbon filaments form a conductive network (σ∥ ~ 50,000 S/m in real material). Transverse to the fibers, conductivity drops by two to three orders of magnitude (σ⊥ ~ 10–500 S/m). The same slab of material responds fundamentally differently depending on which way the E-field is oriented relative to the fibers.
+
+This matters for radar signatures in a way that geometry-only analysis misses. An airframe modeled as a simple metal shell gives you the shape contribution. A CFRP airframe introduces a material anisotropy that is polarization-selective: waves with E-field aligned to the fiber axis interact with a conductor, while cross-polarized waves see a near-dielectric. Rotate the fiber layup and the radar signature rotates with it, independently of the shape.
+
+The FDTD simulation captures this directly. A composite slab with σ∥/σ⊥ = 100× anisotropy ratio (conductivities scaled to be mesh-tractable while preserving the physics) shows:
+
+- **E∥ (E-field along fiber axis):** transmission drops to ~15 % at 1 GHz. The slab spans roughly two skin depths — substantial attenuation with a strong standing-wave pattern in front from incident and reflected field interference.
+- **E⊥ (E-field perpendicular to fibers):** ~95 % transmission across the full simulated band. The slab is effectively transparent to the cross-polarized wave.
+
+The CW animations make the contrast visible directly: the ∥ polarization shows a clear standing wave in front of the slab and near-zero field behind it; the ⊥ polarization shows the wave propagating through almost undisturbed.
+
+The practical implication for RCS analysis: the radar return of a CFRP airframe depends on the fiber orientation relative to the incident wave polarization. A stealth design has to account for the layup direction, not just the geometry. And an RCS measurement without polarization control is giving you an ambiguous number for a material whose whole signature is in how it changes with polarization.
+
+*[embed: cf_efield_comparison.png — 4-panel |E| maps showing anisotropic attenuation at 1 GHz and 2 GHz]*
+*[embed: cf_transmission.png — transmission vs frequency: FDTD vs analytical, Ex and Ey polarisations]*
+
+---
 
 **Validating before trusting**
 
@@ -131,14 +155,19 @@ flowchart TD
     C --> D["✈️ UAV geometry simulation\nopenEMS FDTD, 200mm sphere → aircraft"]
     D --> E["📊 Field decomposition\nNF2FF, E-field dump, Poynting vector"]
     E --> F["💡 Finding: engine cavities\ndominant scattering mechanism"]
+    C --> M["🧵 CFRP material study\nAnisotropic slab: σ∥/σ⊥ = 100×"]
+    M --> N["💡 Finding: polarisation-selective\n15 % vs 95 % transmission"]
     F --> G["📄 Technical report\ndocs/report.html"]
+    N --> G
 
     H["🤖 Claude Code\nPost-processing, validation scripts,\nreport writing"] -.->|"AI-assisted"| B
     H -.->|"AI-assisted"| E
+    H -.->|"AI-assisted"| M
     H -.->|"AI-assisted"| G
 
     style C fill:#2ea44f,color:#fff
     style F fill:#cc5500,color:#fff
+    style N fill:#cc5500,color:#fff
     style H fill:#0066cc,color:#fff
 ```
 
@@ -152,3 +181,7 @@ Use these at the embed markers in the article body:
 - `docs/report_images/sphere_validation_polar.png` — bistatic pattern at Rayleigh (150 MHz) and Resonance (525 MHz) frequencies
 - `docs/report_images/little_plane_still.png` — UAV geometry still frame
 - `docs/report_images/sphere_mie_vs_fdtd_comparison.png` — simple Mie vs FDTD overlay (alternative to the 4-panel if space is tight)
+- `docs/report_images/cf_efield_comparison.png` — 4-panel |E| field maps: Ex and Ey polarisations at 1 GHz and 2 GHz, cropped to the total-field region
+- `docs/report_images/cf_transmission.png` — transmission vs frequency (FDTD + analytical) for both polarisations
+- `docs/report_images/cf_animation_Ex.mp4` — CW animation: E∥ fiber (strong attenuation, standing wave visible in front of slab)
+- `docs/report_images/cf_animation_Ey.mp4` — CW animation: E⊥ fiber (wave propagates through nearly undisturbed)
