@@ -187,10 +187,13 @@ figure {
   text-align: center;
 }
 
-figure img {
+figure img,
+figure video {
   max-width: 100%;
   border: 1px solid var(--border);
   border-radius: 4px;
+  display: block;
+  margin: 0 auto;
 }
 
 figcaption {

@@ -6,8 +6,8 @@ I expected this to be tractable. Find some open-source tools, run some geometry 
 
 More surprising was where the energy was actually coming from. When I modeled a small aluminum aircraft and looked at which parts of the geometry were driving backscatter, it wasn’t the wing edges or leading surfaces I’d expected. It was the engine cavities—visually subtle enclosed volumes that dominate return because of how they trap and re-radiate electromagnetic energy. The obvious geometric features weren’t the story.
 
-![Aluminum aircraft geometry used for RCS simulation](report_images/little_plane_still.png)
-*The aluminum UAV geometry modeled in openEMS. The engine cavity (rear-mounted), fuselage, and wing surfaces are visible. Despite their visual simplicity, the enclosed cavity volumes dominate the backscatter return—a result that becomes apparent only after directional energy decomposition.*
+![UAV geometry used for RCS simulation — rotating animation](report_images/little_plane_animation_15s.mp4)
+*The aluminum UAV geometry modeled in openEMS. The engine cavity (rear-mounted), fuselage, and wing surfaces are visible. Despite their visual simplicity, the enclosed cavity volumes dominate the backscatter return — a result that becomes apparent only after directional energy decomposition.*
 
 That observation pushed the project past simple number-getting. I wanted to understand *why* that number emerges and *which parts of the geometry are responsible*. Running alongside that: **how complex is RCS-optimized aircraft design as an engineering problem?** The tech tree in Section 9 maps that concretely. The short answer is: more complex than any single person can adequately address on a workstation, but the starting rungs are more accessible than the tooling landscape suggests.
 
@@ -231,6 +231,11 @@ The raw E-field slice is too low-level. It shows the electromagnetic solution bu
 
 This problem becomes even clearer when examining canonical geometries. Consider the hollow conducting sphere case used as a validation example.
 
+![Hollow sphere FDTD simulation — time-domain E-field animation](report_images/hollow_sphere_animation.mp4)
+*Time-domain FDTD simulation of the hollow conducting sphere. The incident plane wave arrives from the left, interacts with the sphere surface, and produces a scattered field. The animation illustrates how the raw simulation data evolves over time — rich in physical content but not yet directionally interpretable.*
+
+The frequency-domain snapshot below captures a single moment from this sequence at the centre frequency f₀:
+
 ![E-field magnitude mid-plane slice from sphere FDTD simulation](report_images/sphere_efield_slice.png)
 *Mid-plane (z = 0) slice of the total E-field magnitude |E| from the openEMS FDTD sphere simulation at a single frequency snapshot. The incident plane wave arrives from the left; constructive interference creates the bright bands ahead of the sphere, while the geometric shadow behind it shows reduced field intensity. The dashed white circle marks the sphere boundary (r = 150 mm). The full volumetric field contains 53³ ≈ 150,000 complex-valued samples — illustrating the raw data volume that must be post-processed to extract directional RCS.*
 
@@ -345,10 +350,10 @@ For a perfectly-conducting sphere, the Mie series (Bohren & Huffman, Ch. 4) prov
 
 The openEMS sphere example was specifically chosen because this comparison is well-established in the literature. The 3 % Rayleigh-band agreement and sub-0.5 dB amplitude bias confirm that the solver is behaving correctly across the canonical symmetric case. The resonance frequency shifts visible at higher ka are expected FDTD behaviour at λ/20 resolution and would be reduced by refining the mesh — they do not affect the qualitative validation result.
 
-Alongside the frequency-domain backscatter comparison, the full azimuthal far-field scattering pattern at f₀ = 525 MHz (a/λ = 0.35, middle of the resonance regime) was post-processed from the same NF2FF data and compared against the complete Mie bistatic solution in the equatorial plane.
+Alongside the frequency-domain backscatter comparison, the full azimuthal far-field scattering pattern was post-processed from the same NF2FF data at two frequencies — one in the Rayleigh regime and one in the resonance regime — and compared against the complete Mie bistatic solution in the equatorial plane.
 
-![FDTD vs Mie polar pattern](report_images/sphere_validation_polar.png)
-*Far-field bistatic scattering pattern in the equatorial plane (θ = 90°, φ varying) at f₀ = 525 MHz. Left: polar dB plot (normalised to peak); right: absolute bistatic RCS σ(φ) in cm². The Mie analytical result (solid blue) is computed using the full angular amplitude function S₁(φ) for s-polarisation (E_z incident ⊥ scatter plane throughout the equatorial scan). The FDTD NF2FF result (dashed red) matches the Mie curve in both the forward-scatter lobe structure and the backscatter value (φ = ±180°), confirming that the NF2FF transformation is geometrically correct and the scattering physics is properly captured.*
+![FDTD vs Mie polar pattern — dual frequency](report_images/sphere_validation_polar.png)
+*Far-field bistatic scattering patterns in the equatorial plane (θ = 90°, φ varying), each shown as a polar dB plot (top) and absolute RCS σ(φ) in cm² (bottom). The Mie analytical result (solid blue) is computed using the full angular amplitude function S₁(φ) for s-polarisation (E_z incident, scatter plane = xy-plane throughout the equatorial scan). **Left column (resonance regime, f₀ = 525 MHz, a/λ = 0.35):** the pattern dB-RMS error is consistent with the frequency-sweep amplitude bias; the dominant source is the resonance-frequency shift (the FDTD lobe positions are slightly displaced in frequency from Mie). **Right column (Rayleigh regime, f = 150 MHz, a/λ = 0.10):** the FDTD and Mie patterns are nearly indistinguishable — the mesh is far finer than needed at this frequency, giving sub-5 % backscatter error and < 0.5 dB pattern dB-RMS. Together, the two panels confirm that the NF2FF angular transformation is geometrically correct and that the FDTD accuracy follows the expected regime-dependent behaviour throughout.*
 
 ---
 

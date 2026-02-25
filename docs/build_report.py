@@ -111,6 +111,26 @@ def postprocess(html: str) -> str:
         html,
     )
 
+    # — Video files: rewrite <img src="*.mp4"> → <video autoplay loop muted> ——
+    # Markdown image syntax is the only way to embed in .md; we convert here.
+    def _img_to_video(m):
+        src = m.group(1)
+        rest = m.group(2)   # everything after the src attr (figcaption or closing)
+        video = (
+            f'<video autoplay loop muted playsinline style="max-width:100%">'
+            f'<source src="{src}" type="video/mp4">'
+            f'Your browser does not support the video tag.'
+            f'</video>'
+        )
+        return f'<figure>{video}{rest}'
+
+    html = re.sub(
+        r'<figure><img[^>]+src="([^"]+\.mp4)"[^>]*/>(.*?</figure>)',
+        _img_to_video,
+        html,
+        flags=re.DOTALL,
+    )
+
     # — Wrap tech tree figure in horizontal scroll container ——————————————————
     def _wrap_tech_tree(m):
         inner = m.group(1)

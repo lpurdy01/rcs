@@ -54,6 +54,10 @@ SCRIPT_DIR   = os.path.dirname(os.path.abspath(__file__))
 OUT_RCS      = os.path.join(SCRIPT_DIR, 'sphere_validation_rcs.png')
 OUT_POLAR    = os.path.join(SCRIPT_DIR, 'sphere_validation_polar.png')
 
+# Second frequency for polar comparison — Rayleigh regime (a/λ ≈ 0.10)
+# Expected FDTD error < 5 %, giving clean Mie vs FDTD agreement.
+F_POLAR_2    = 150e6          # Hz
+
 SPHERE_RAD_M = SPHERE_RAD * unit   # 0.2 m
 
 
@@ -381,89 +385,129 @@ def fig_rcs_validation(freq_fdtd, rcs_fdtd):
     plt.close(fig)
 
 
-def fig_polar_comparison(phi_fdtd, rcs_fdtd_pattern):
-    """Polar figure: equatorial scattering pattern — FDTD vs Mie bistatic."""
+def _polar_panel(fig, gs_row, gs_col, phi_fdtd, rcs_fdtd_pattern, f_hz, label_regime):
+    """
+    Fill one column of the 2×2 polar figure:
+      top    — polar dB plot
+      bottom — linear RCS vs phi
 
-    # Mie bistatic (dense)
+    Returns RMS error (%) for the title.
+    """
     phi_mie = np.linspace(-180, 180, 721)
-    rcs_mie = mie_bistatic_rcs(F0, phi_mie)
+    rcs_mie = mie_bistatic_rcs(f_hz, phi_mie)
 
-    # dB (relative to peak of Mie for a fair shape comparison)
+    # Peak relative to joint max for shape comparison
     peak_lin = max(rcs_mie.max(), rcs_fdtd_pattern.max())
-    def to_db(x): return 10 * np.log10(np.clip(x / peak_lin, 1e-8, None))
+    def to_db(x):
+        return 10 * np.log10(np.clip(x / peak_lin, 1e-8, None))
 
     rcs_fdtd_db = to_db(rcs_fdtd_pattern)
     rcs_mie_db  = to_db(rcs_mie)
 
-    # Also compute absolute values for annotation
-    bs_fdtd = np.interp(180.0, phi_fdtd, rcs_fdtd_pattern)
-    bs_mie  = float(mie_bistatic_rcs(F0, np.array([180.0]))[0])
+    # Backscatter annotations
+    bs_fdtd = float(np.interp(180.0, phi_fdtd, rcs_fdtd_pattern))
+    bs_mie  = float(mie_bistatic_rcs(f_hz, np.array([180.0]))[0])
 
-    fig, (ax_pol, ax_lin) = plt.subplots(1, 2, figsize=(13, 6),
-                                          gridspec_kw={'width_ratios': [1, 1],
-                                                       'wspace': 0.38})
+    # dB-RMS error vs Mie  (avoids division-by-near-zero at pattern nulls;
+    # percentage error explodes at nulls even when the absolute agreement is good)
+    rcs_mie_on_fdtd_grid = np.interp(phi_fdtd, phi_mie, rcs_mie)
+    peak = rcs_mie_on_fdtd_grid.max()
+    floor = peak * 1e-6       # −60 dB floor
+    db_fdtd = 10 * np.log10(np.maximum(rcs_fdtd_pattern, floor))
+    db_mie  = 10 * np.log10(np.maximum(rcs_mie_on_fdtd_grid, floor))
+    db_err  = db_fdtd - db_mie
+    rms_err  = float(np.sqrt(np.mean(db_err ** 2)))   # dB RMS
+    mean_err = float(np.mean(db_err))                 # dB mean bias
 
-    # ── Left: polar plot ─────────────────────────────────────────────────
-    ax_pol.remove()
-    ax_pol = fig.add_subplot(1, 2, 1, projection='polar')
+    aol = SPHERE_RAD_M * f_hz / C0
 
+    # ── Top: polar dB ──────────────────────────────────────────────────
+    ax_pol = fig.add_subplot(2, 2, gs_row * 2 + gs_col + 1, projection='polar')
+    RMIN = -40
     phi_mie_rad  = np.deg2rad(phi_mie)
     phi_fdtd_rad = np.deg2rad(phi_fdtd)
-
-    RMIN = -40
-    ax_pol.plot(phi_mie_rad,  rcs_mie_db  - RMIN, 'b-',  lw=2.0, label='Mie (analytical)')
-    ax_pol.plot(phi_fdtd_rad, rcs_fdtd_db - RMIN, 'r--', lw=1.8, label='openEMS FDTD')
+    ax_pol.plot(phi_mie_rad,  rcs_mie_db  - RMIN, 'b-',  lw=2.0,
+                label='Mie (analytical)', zorder=3)
+    ax_pol.plot(phi_fdtd_rad, rcs_fdtd_db - RMIN, 'r--', lw=1.6,
+                label='openEMS FDTD', zorder=4)
     ax_pol.set_rmin(0)
     ax_pol.set_rmax(-RMIN)
     r_ticks = np.arange(0, -RMIN + 1, 10)
     ax_pol.set_rticks(r_ticks)
-    ax_pol.set_yticklabels([f'{t + RMIN:.0f}' for t in r_ticks], fontsize=8)
+    ax_pol.set_yticklabels([f'{t + RMIN:.0f}' for t in r_ticks], fontsize=7)
     ax_pol.set_rlabel_position(135)
-    ax_pol.set_theta_zero_location('E')   # 0° = +x (forward scatter)
-    ax_pol.set_theta_direction(1)         # counter-clockwise
+    ax_pol.set_theta_zero_location('E')
+    ax_pol.set_theta_direction(1)
     ax_pol.set_title(
-        f'Far-field Pattern  (θ=90° equatorial plane)\n'
-        f'PEC sphere, $a$={SPHERE_RAD:.0f} mm, $f_0$={F0/1e6:.0f} MHz\n'
-        f'0° = forward scatter,  ±180° = backscatter\n(dB rel. to peak)',
-        fontsize=9, pad=18
+        f'{label_regime}\n'
+        f'$f$ = {f_hz/1e6:.0f} MHz,  $a/\\lambda$ = {aol:.3f}\n'
+        f'Pattern dB-RMS = {rms_err:.2f} dB,  mean bias = {mean_err:+.2f} dB\n'
+        f'(dB rel. to joint peak)',
+        fontsize=8.5, pad=12
     )
-    ax_pol.legend(loc='lower right', fontsize=9, bbox_to_anchor=(1.35, -0.05))
-    ax_pol.grid(True)
+    ax_pol.legend(loc='lower right', fontsize=8, bbox_to_anchor=(1.35, -0.05))
+    ax_pol.grid(True, alpha=0.5)
 
-    # ── Right: linear overlay (RCS vs phi) ──────────────────────────────
-    ax_lin.plot(phi_mie,  rcs_mie  * 1e4, 'b-',  lw=2.0, label='Mie (analytical)')
-    ax_lin.plot(phi_fdtd, rcs_fdtd_pattern * 1e4, 'r--', lw=1.6,
-                label='openEMS FDTD')
-    ax_lin.set_xlabel('Azimuthal angle φ (degrees)', fontsize=12)
-    ax_lin.set_ylabel('RCS  σ  (cm²)', fontsize=12)
-    ax_lin.set_title(f'Bistatic RCS in Equatorial Plane\n'
-                     f'$f_0$ = {F0/1e6:.0f} MHz  ($a/\\lambda$ = '
-                     f'{SPHERE_RAD_M * F0 / C0:.3f})',
-                     fontsize=11, fontweight='bold')
+    # ── Bottom: linear ─────────────────────────────────────────────────
+    ax_lin = fig.add_subplot(2, 2, gs_row * 2 + gs_col + 3)
+    ax_lin.plot(phi_mie,  rcs_mie * 1e4, 'b-',  lw=2.0, label='Mie (analytical)')
+    ax_lin.plot(phi_fdtd, rcs_fdtd_pattern * 1e4, 'r--', lw=1.5, label='openEMS FDTD')
+    ax_lin.set_xlabel('Azimuthal angle φ  (°)', fontsize=10)
+    ax_lin.set_ylabel('RCS  σ  (cm²)', fontsize=10)
     ax_lin.set_xlim(-180, 180)
     ax_lin.set_xticks(np.arange(-180, 181, 45))
-    ax_lin.axvline(180,  color='0.6', lw=0.7, ls='--')
-    ax_lin.axvline(-180, color='0.6', lw=0.7, ls='--')
-    ax_lin.text(-175, ax_lin.get_ylim()[1] * 0.92, 'backscatter', fontsize=7.5,
-                color='0.5', style='italic')
-    # Annotate backscatter values
+    ax_lin.axvline(180,  color='0.65', lw=0.7, ls='--')
+    ax_lin.axvline(-180, color='0.65', lw=0.7, ls='--')
+    # Backscatter annotation
+    y_lim_approx = max(rcs_mie.max(), rcs_fdtd_pattern.max()) * 1e4
     ax_lin.annotate(f'Mie: {bs_mie*1e4:.2f} cm²',
                     xy=(180, bs_mie * 1e4),
-                    xytext=(-80, bs_mie * 1e4 * 0.85),
-                    fontsize=8, color='blue',
+                    xytext=(-80, bs_mie * 1e4 * 1.1 + y_lim_approx * 0.04),
+                    fontsize=7.5, color='blue',
                     arrowprops=dict(arrowstyle='->', color='blue', lw=0.8))
     ax_lin.annotate(f'FDTD: {bs_fdtd*1e4:.2f} cm²',
                     xy=(180, bs_fdtd * 1e4),
-                    xytext=(-80, bs_fdtd * 1e4 * 0.65),
-                    fontsize=8, color='red',
+                    xytext=(-80, bs_fdtd * 1e4 * 0.7),
+                    fontsize=7.5, color='red',
                     arrowprops=dict(arrowstyle='->', color='red', lw=0.8))
-    ax_lin.legend(fontsize=9)
+    ax_lin.legend(fontsize=8.5, loc='upper left')
     ax_lin.grid(True, alpha=0.3)
 
+    return rms_err, mean_err
+
+
+def fig_polar_comparison(phi_f0, rcs_f0, phi_f2=None, rcs_f2=None):
+    """
+    2×2 polar comparison figure.
+
+    Left column  — Resonance regime (f0 = 525 MHz, a/λ ≈ 0.35)
+    Right column — Rayleigh regime  (f2 = F_POLAR_2,  a/λ ≈ 0.10)
+
+    Top row: polar dB patterns.  Bottom row: linear bistatic RCS.
+    """
+    fig = plt.figure(figsize=(16, 10))
+
+    rms0, mean0 = _polar_panel(fig, 0, 0, phi_f0, rcs_f0, F0,
+                                f'(A/C) Resonance regime  —  $f_0$ = {F0/1e6:.0f} MHz')
+
+    if phi_f2 is not None and rcs_f2 is not None:
+        rms2, mean2 = _polar_panel(fig, 0, 1, phi_f2, rcs_f2, F_POLAR_2,
+                                    f'(B/D) Rayleigh regime  —  $f$ = {F_POLAR_2/1e6:.0f} MHz')
+        subtitle_extra = (f'   |   Rayleigh pattern dB-RMS = {rms2:.2f} dB  '
+                          f'(λ/20 mesh is ≫λ/20 resolution in Rayleigh → near-exact)')
+    else:
+        subtitle_extra = ''
+
     fig.suptitle(
-        'openEMS FDTD Validation — Bistatic Scattering Pattern vs Mie Theory',
-        fontsize=12, fontweight='bold', y=1.01
+        f'openEMS FDTD Validation — Bistatic Equatorial Scattering Pattern vs Mie Theory\n'
+        f'PEC sphere, $a$ = {SPHERE_RAD:.0f} mm   ·   '
+        f'Resonance pattern dB-RMS = {rms0:.2f} dB,  mean = {mean0:+.2f} dB  '
+        f'(resonance-frequency-shift artefact at $f_0$)'
+        + subtitle_extra,
+        fontsize=9.5, fontweight='bold', y=1.01
     )
+
+    plt.tight_layout()
     plt.savefig(OUT_POLAR, dpi=150, bbox_inches='tight')
     print(f'Saved: {OUT_POLAR}')
     plt.close(fig)
@@ -490,10 +534,13 @@ if __name__ == '__main__':
     print('─── Step 2/4: Computing Mie series and generating RCS validation figure …')
     fig_rcs_validation(freq_fdtd, rcs_fdtd)
 
-    print('─── Step 3/4: Post-processing polar pattern at f0 …')
+    print('─── Step 3/4: Post-processing polar pattern at f0 (resonance) …')
     phi_fdtd, rcs_polar = fdtd_polar(F0)
 
-    print('─── Step 4/4: Generating polar comparison figure …')
-    fig_polar_comparison(phi_fdtd, rcs_polar)
+    print(f'─── Step 3b/4: Post-processing polar pattern at {F_POLAR_2/1e6:.0f} MHz (Rayleigh) …')
+    phi_fdtd_2, rcs_polar_2 = fdtd_polar(F_POLAR_2)
+
+    print('─── Step 4/4: Generating dual-frequency polar comparison figure …')
+    fig_polar_comparison(phi_fdtd, rcs_polar, phi_fdtd_2, rcs_polar_2)
 
     print('Done.')
